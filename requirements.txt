@@ -1,0 +1,6 @@
+requests
+pyarrow
+ndjson
+pandas
+matplotlib
+statsmodels
