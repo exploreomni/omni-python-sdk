@@ -13,7 +13,7 @@ class OmniAPI:
         self.api_key = api_key
         self.base_url = base_url
 
-    def wait_query(self, remaining_job_ids:  List[str]) -> Tuple[Any, bool]:
+    def wait_query_blocking(self, remaining_job_ids:  List[str]) -> Tuple[Any, bool]:
         url = f"{self.base_url}/query/wait"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -32,7 +32,7 @@ class OmniAPI:
         else:
             response.raise_for_status()
     
-    def run_query(self, body: dict):
+    def run_query_blocking(self, body: dict):
         url = f"{self.base_url}/query/run"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -60,4 +60,3 @@ class OmniAPI:
                 raise ValueError("No result found in the response.")
         else:
             response.raise_for_status()
-            
