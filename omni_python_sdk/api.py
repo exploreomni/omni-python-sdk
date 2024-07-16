@@ -9,7 +9,7 @@ import base64
 from typing import List, Tuple, Any
 
 class OmniAPI:
-    def __init__(self, api_key: str, base_url: str = "https://dev.thundersalmon.com/api/v0"):
+    def __init__(self, api_key: str, base_url: str = "https://dev.thundersalmon.com/api/unstable"):
         self.api_key = api_key
         self.base_url = base_url
 
