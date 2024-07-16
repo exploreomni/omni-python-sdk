@@ -46,7 +46,7 @@ class OmniAPI:
             footer = response_json[-1]
             done = footer['timed_out'] == 'false'
             while not done:
-                response_json, done = self.wait_query(footer['remaining_job_ids'])
+                response_json, done = self.wait_query_blocking(footer['remaining_job_ids'])
             data_payload = next((data_payload for data_payload in response_json if "result" in data_payload), None)
             if data_payload is not None:
                 base64_data = data_payload['result']

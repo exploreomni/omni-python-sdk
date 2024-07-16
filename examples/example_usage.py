@@ -59,6 +59,6 @@ if __name__ == "__main__":
     }
 
     api = OmniAPI(api_key)
-    table = api.run_query(query)
+    table = api.run_query_blocking(query)
     df = table.to_pandas()
     plot_and_forecast(df)

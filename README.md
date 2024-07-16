@@ -31,7 +31,7 @@ query = {
 }
 
 api = OmniAPI(api_key)
-table = api.run_query(query)
+table = api.run_query_blocking(query)
 df = table.to_pandas()
 print(df.head())
 ```
