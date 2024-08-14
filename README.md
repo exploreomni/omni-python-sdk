@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```python3
-from my_python_sdk import OmniAPI
+from omni_python_sdk import OmniAPI
 
 api_key = "your_api_key"
 query = {
