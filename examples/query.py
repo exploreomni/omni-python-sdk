@@ -2,16 +2,18 @@ import sys
 import json
 import pandas as pd
 from omni_python_sdk import OmniAPI
+from typing import Any, Dict
 
-def main(api_key: str, base_url: str, json_query: dict[str, Any]):
+
+def main(api_key: str, base_url: str, json_query: Dict[str, Any]):
 	# Initialize the OmniAPI client
 	client = OmniAPI(api_key, base_url)
 
 	# Execute the query
-	result = client.query(json_query)
+	result = client.run_query_blocking(json_query)
 
 	# Convert the result to a pandas DataFrame
-	df = pd.DataFrame(result)
+	df = result.to_pandas()
 
 	# Output the DataFrame as a CSV to the command line
 	print(df.to_csv(index=False))
