@@ -10,3 +10,6 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+build/
+dist/
+omni_python_sdk.egg-info/
