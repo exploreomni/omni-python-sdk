@@ -1,4 +1,4 @@
-from my_python_sdk import OmniAPI
+from omni_python_sdk import OmniAPI
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
