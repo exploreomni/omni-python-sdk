@@ -55,7 +55,7 @@ class OmniAPI:
                 buffer = io.BytesIO(raw_arrow_data)
                 reader = ipc.open_stream(buffer)
                 table = reader.read_all()
-                return table
+                return table, data_payload['summary']['fields']
             else:
                 raise ValueError("No result found in the response.")
         else:
