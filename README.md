@@ -9,31 +9,42 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-
-```python3
+```python
 from omni_python_sdk import OmniAPI
 
+# Set your API key and base URL
 api_key = "your_api_key"
 base_url = "https://your_domain.omniapp.co/api/unstable"
+
+# Define your query
 query = {
-    "sorts": [
-        {
-            "column_name": "order_items.created_at[date]",
-            "sort_descending": False
-        }
-    ],
-    "table": "order_items",
-    "fields": [
-        "order_items.created_at[date]",
-        "order_items.sale_price_sum"
-    ],
-    "modelId": "your_model_id",
-    "join_paths_from_topic_name": "order_items"
+    "query": {
+        "sorts": [
+            {
+                "column_name": "order_items.created_at[date]",
+                "sort_descending": False
+            }
+        ],
+        "table": "order_items",
+        "fields": [
+            "order_items.created_at[date]",
+            "order_items.sale_price_sum"
+        ],
+        "modelId": "your_model_id",
+        "join_paths_from_topic_name": "order_items"
+    }
 }
 
-api = OmniAPI(api_key)
+# Initialize the API with your credentials
+api = OmniAPI(api_key, base_url)
+
+# Run the query and get a table
 table = api.run_query_blocking(query)
+
+# Convert the table to a Pandas DataFrame
 df = table.to_pandas()
+
+# Display the first few rows of the DataFrame
 print(df.head())
 ```
 
