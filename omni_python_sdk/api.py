@@ -58,58 +58,82 @@ class OmniAPI:
         else:
             response.raise_for_status()
     
+    def base_model_url(self):
+        return f"{self.base_url}/model"
+    
+    def model_url(self, model_id: str):
+        return f"{self.base_model_url()}/{model_id}"
+    
+    def base_topic_url(self, model_id: str):
+        return f"{self.base_model_url()}/{model_id}/topic"
+    
+    def topic_url(self, model_id: str, topic_name: str):
+        return f"{self.base_topic_url(model_id)}/{topic_name}"
+
+    def base_view_url(self, model_id: str):
+        return f"{self.base_model_url()}/{model_id}/view"
+
+    def view_url(self, model_id: str, view_name: str):
+        return f"{self.base_view_url(model_id)}/{view_name}"
+
+    def base_field_url(self, model_id: str):
+        return f"{self.base_view_url(model_id)}/field"
+    
+    def field_url(self, model_id: str, view_name: str, field_name: str):
+        return f"{self.view_url(model_id, view_name)}/field/{field_name}"
+
     def create_model(self, connection_id: str, body: dict):
-        url = f"{self.base_url}/model"
+        url = self.base_model_url()
         body["connectionId"] = connection_id
         response = requests.post(url, headers=self.headers, json=body)
         return response.json()
 
     def create_topic(self, model_id: str, base_view_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/topic"
+        url = self.base_topic_url(model_id)
         body["baseViewName"] = base_view_name
         response = requests.post(url, headers=self.headers, json=body)
         return response.json()
 
     def update_topic(self, model_id: str, topic_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/topic/{topic_name}"
+        url = self.topic_url(model_id, topic_name)
         response = requests.patch(url, headers=self.headers, json=body)
         return response.json()
 
     def delete_topic(self, model_id: str, topic_name: str):
-        url = f"{self.base_url}/model/{model_id}/topic/{topic_name}"
+        url = self.topic_url(model_id, topic_name)
         response = requests.delete(url, headers=self.headers)
         return response.json()
 
     def create_view(self, model_id: str, view_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/view"
+        url = self.base_view_url(model_id)
         body["viewName"] = view_name
         response = requests.post(url, headers=self.headers, json=body)
         return response.json()
     
     def update_view(self, model_id: str, view_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/view/{view_name}"
+        url = self.view_url(model_id, view_name)
         body["viewName"] = view_name
         response = requests.patch(url, headers=self.headers, json=body)
         return response.json()
     
     def delete_view(self, model_id: str, view_name: str):
-        url = f"{self.base_url}/model/{model_id}/view/{view_name}"
+        url = self.view_url(model_id, view_name)
         response = requests.delete(url, headers=self.headers)
         return response.json()
 
     def create_field(self, model_id: str, view_name: str, field_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/field"
+        url = self.base_field_url(model_id)
         body["fieldName"] = field_name
         body["viewName"] = view_name
         response = requests.post(url, headers=self.headers, json=body)
         return response.json()
 
     def update_field(self, model_id: str, view_name: str, field_name: str, body: dict):
-        url = f"{self.base_url}/model/{model_id}/view/{view_name}/field/{field_name}"
+        url = self.field_url(model_id, view_name, field_name)
         response = requests.patch(url, headers=self.headers, json=body)
         return response.json()
 
     def delete_field(self, model_id: str, view_name: str, field_name: str):
-        url = f"{self.base_url}/model/{model_id}/view/{view_name}/field/{field_name}"
+        url = self.field_url(model_id, view_name, field_name)
         response = requests.delete(url, headers=self.headers)
         return response.json()
