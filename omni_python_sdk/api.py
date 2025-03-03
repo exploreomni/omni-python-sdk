@@ -139,7 +139,7 @@ class OmniAPI:
         return response.json()
     
     def create_user(self, body:dict):
-        url = f"{self.base_url}/scim/v2/users"
+        url = f"{self.base_url}/api/scim/v2/users"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -148,7 +148,7 @@ class OmniAPI:
         return response
     
     def update_user(self, id, body:dict):
-        url = f"{self.base_url}/scim/v2/users/{id}"
+        url = f"{self.base_url}/api/scim/v2/users/{id}"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -157,7 +157,7 @@ class OmniAPI:
         return response
     
     def find_user_by_email(self, email:str):
-        url = f"{self.base_url}/scim/v2/users"
+        url = f"{self.base_url}/api/scim/v2/users"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -207,7 +207,7 @@ class OmniAPI:
             print(f'user {email} not found')
 
     def delete_user_by_id(self, id:str):
-        url = f"{self.base_url}/scim/v2/users"
+        url = f"{self.base_url}/api/scim/v2/users"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -225,7 +225,7 @@ class OmniAPI:
         return response.json()
 
     def document_import(self, body:dict):
-        url = f"{self.base_url}/unstable/documents/import"
+        url = f"{self.base_url}/api/unstable/documents/import"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -234,7 +234,7 @@ class OmniAPI:
         return response
     
     def list_folders(self, path:str='') -> dict:
-        url = f"{self.base_url}/unstable/folders"
+        url = f"{self.base_url}/api/unstable/folders"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -248,7 +248,7 @@ class OmniAPI:
         return response.json()
     
     def list_documents(self, folderId:str='') -> dict:
-        url = f"{self.base_url}/unstable/documents"
+        url = f"{self.base_url}/api/unstable/documents"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'

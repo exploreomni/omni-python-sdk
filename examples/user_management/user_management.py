@@ -2,7 +2,8 @@ from omni_python_sdk import OmniAPI
 import csv, time
 
 api_key = '<<your api key>>'
-base_url = 'https://<<your omni host>>/'
+base_url = 'https://<<your omni host>>'
+
 
 # Initialize the API with your credentials
 api = OmniAPI(api_key, base_url)
