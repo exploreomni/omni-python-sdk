@@ -137,3 +137,145 @@ class OmniAPI:
         url = self.field_url(model_id, view_name, field_name)
         response = requests.delete(url, headers=self.headers)
         return response.json()
+    
+    def create_user(self, body:dict):
+        url = f"{self.base_url}/scim/v2/users"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(url, headers=headers, json=body)
+        return response
+    
+    def update_user(self, id, body:dict):
+        url = f"{self.base_url}/scim/v2/users/{id}"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.put(url, headers=headers, json=body)
+        return response
+    
+    def find_user_by_email(self, email:str):
+        url = f"{self.base_url}/scim/v2/users"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.get(url, headers=headers, params={'filter': f'userName eq "{email}"'})
+        return response
+    
+    def upsert_user(self, email:str, displayName:str, attributes:dict):
+        body ={
+            "urn:omni:params:1.0:UserAttribute":self.listify(attributes)
+        }
+        response = self.find_user_by_email(email)
+        if response.status_code == 200:
+            users = response.json()['Resources']
+            if len(users) == 1:
+                user = users[0]
+                body.update({"userName":email, "displayName":displayName})
+                update_response = self.update_user(user['id'],body)
+                if update_response.status_code == 200:
+                    print(f"updated user id {user['id']}")
+                else:
+                    print(f"Error ({update_response.status_code}) updating user id {user['id']}")
+            elif len(users) == 0:
+                body.update({"userName":email, "displayName":displayName})
+                creation_response = self.create_user(body)
+                if creation_response.status_code == 201:
+                    print(f'Created {email}, userid: {creation_response.json()['id']}')
+                else:
+                    print(f'Error creating {email}: {creation_response.status_code}')
+
+            elif len(users) > 1:
+                print(f'{len(users)} found for {email}, no action taken')
+
+    def delete_user(self, email):
+        users = self.find_user_by_email(email).json()['Resources']
+        if len(users) == 1:
+            user = users[0]
+            response = self.delete_user_by_id(user['id'])
+            if response.status_code == 204:
+                print(f"deleted userid: {user['id']} email: {email}")
+                return response
+        elif len(users) > 1:
+            print('found too many users for email {email}: ')
+            for u in users:
+                print(u['id'])
+        elif len(users) == 0:
+            print(f'user {email} not found')
+
+    def delete_user_by_id(self, id:str):
+        url = f"{self.base_url}/scim/v2/users"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.delete(f"{url}/{id}", headers=headers)
+        return response
+    
+    def document_export(self, id:str)->dict:
+        url = f"{self.base_url}/unstable/documents/{id}/export"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.get(url,headers=headers)
+        return response.json()
+
+    def document_import(self, body:dict):
+        url = f"{self.base_url}/unstable/documents/import"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(url,headers=headers, json=body)
+        return response
+    
+    def list_folders(self, path:str='') -> dict:
+        url = f"{self.base_url}/unstable/folders"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.get(url, 
+                                headers=headers, 
+                                params={
+                                    'path': path,
+                                    }
+                                )
+        return response.json()
+    
+    def list_documents(self, folderId:str='') -> dict:
+        url = f"{self.base_url}/unstable/documents"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.get(url, 
+                                headers=headers, 
+                                params={
+                                    'folderId': folderId if folderId else None,
+                                    }
+                                )
+        return response.json() 
+    
+    @classmethod
+    def listify(cls, d:dict) -> dict:
+        out = {}
+        for k,v in d.items():
+            if '[' in v and ']' in v:
+                out.update({k:[item for item in v.replace('[','').replace(']','').split(',')]})
+            else:
+                out.update({k:v})
+        return out
+    
+    def generate_embed_url(self,body:dict) -> dict:
+        url = f"{self.base_url}/embed/sso/generate-url"
+        headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(url, headers=headers, json=body)
+        return response
