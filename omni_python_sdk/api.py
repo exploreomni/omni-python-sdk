@@ -216,7 +216,7 @@ class OmniAPI:
         return response
     
     def document_export(self, id:str)->dict:
-        url = f"{self.base_url}/unstable/documents/{id}/export"
+        url = f"{self.base_url}/api/unstable/documents/{id}/export"
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
