@@ -1,6 +1,6 @@
 from omni_python_sdk import OmniAPI
 
-api = OmniAPI('https://<<your omni host>>','<<your api key>>')
+api = OmniAPI('<<your api key>>','https://<<your omni host>>')
 
 response = api.generate_embed_url(
     {
