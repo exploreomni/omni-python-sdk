@@ -184,7 +184,7 @@ class OmniAPI:
                 body.update({"userName":email, "displayName":displayName})
                 creation_response = self.create_user(body)
                 if creation_response.status_code == 201:
-                    print(f'Created {email}, userid: {creation_response.json()['id']}')
+                    print(f'Created {email}, userid: {creation_response.json()["id"]}')
                 else:
                     print(f'Error creating {email}: {creation_response.status_code}')
 
