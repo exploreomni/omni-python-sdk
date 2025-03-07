@@ -7,6 +7,34 @@ import json
 import ndjson
 import base64
 from typing import List, Tuple, Any
+import functools
+
+def requests_error_handler(func):
+    """
+    Decorator to handle generic errors when raising a status
+    via `response.raise_for_status()`. It catches all exceptions that occur when 
+    calling the decorated function and prints an error message with exception details.
+    Args:
+        func (callable): The function to be decorated.
+    Returns:
+        wrapper (callable): A wrapper function that handles exceptions.
+    Raises:
+        None (handled internally)
+    Example Use:
+        @requests_error_handler
+        def get_data(url):
+            response = requests.get(url)
+            response.raise_for_status()
+            return response.json()
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"Request Failed: {e}")
+            return None
+    return wrapper
 
 class OmniAPI:
     """
@@ -35,6 +63,7 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
 
+    @requests_error_handler
     def wait_query_blocking(self, remaining_job_ids: List[str]) -> Tuple[Any, bool]:
         """
         Wait for query jobs to complete.
@@ -60,6 +89,7 @@ class OmniAPI:
         else:
             response.raise_for_status()
 
+    @requests_error_handler
     def run_query_blocking(self, body: dict) -> Tuple[pa.Table, List[dict]]:
         """
         Run a query and wait for its completion.
@@ -176,7 +206,8 @@ class OmniAPI:
             str: The URL for the specified field.
         """
         return f"{self.view_url(model_id, view_name)}/field/{field_name}"
-
+    
+    @requests_error_handler
     def create_model(self, connection_id: str, body: dict) -> dict:
         """
         Create a new model.
@@ -191,8 +222,10 @@ class OmniAPI:
         url = self.base_model_url()
         body["connectionId"] = connection_id
         response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def create_topic(self, model_id: str, base_view_name: str, body: dict) -> dict:
         """
         Create a new topic.
@@ -208,8 +241,10 @@ class OmniAPI:
         url = self.base_topic_url(model_id)
         body["baseViewName"] = base_view_name
         response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def update_topic(self, model_id: str, topic_name: str, body: dict) -> dict:
         """
         Update an existing topic.
@@ -224,8 +259,10 @@ class OmniAPI:
         """
         url = self.topic_url(model_id, topic_name)
         response = requests.patch(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def delete_topic(self, model_id: str, topic_name: str) -> dict:
         """
         Delete a topic.
@@ -239,8 +276,10 @@ class OmniAPI:
         """
         url = self.topic_url(model_id, topic_name)
         response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def create_view(self, model_id: str, view_name: str, body: dict) -> dict:
         """
         Create a new view.
@@ -256,8 +295,10 @@ class OmniAPI:
         url = self.base_view_url(model_id)
         body["viewName"] = view_name
         response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def update_view(self, model_id: str, view_name: str, body: dict) -> dict:
         """
         Update an existing view.
@@ -273,8 +314,10 @@ class OmniAPI:
         url = self.view_url(model_id, view_name)
         body["viewName"] = view_name
         response = requests.patch(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def delete_view(self, model_id: str, view_name: str) -> dict:
         """
         Delete a view.
@@ -288,8 +331,10 @@ class OmniAPI:
         """
         url = self.view_url(model_id, view_name)
         response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def create_field(self, model_id: str, view_name: str, field_name: str, body: dict) -> dict:
         """
         Create a new field.
@@ -307,8 +352,10 @@ class OmniAPI:
         body["fieldName"] = field_name
         body["viewName"] = view_name
         response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def update_field(self, model_id: str, view_name: str, field_name: str, body: dict) -> dict:
         """
         Update an existing field.
@@ -324,8 +371,10 @@ class OmniAPI:
         """
         url = self.field_url(model_id, view_name, field_name)
         response = requests.patch(url, headers=self.headers, json=body)
+        response.raise_for_status()
         return response.json()
-
+    
+    @requests_error_handler
     def delete_field(self, model_id: str, view_name: str, field_name: str) -> dict:
         """
         Delete a field.
@@ -340,8 +389,10 @@ class OmniAPI:
         """
         url = self.field_url(model_id, view_name, field_name)
         response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def create_user(self, body: dict) -> requests.Response:
         """
         Create a new user.
@@ -358,8 +409,10 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.post(url, headers=headers, json=body)
+        response.raise_for_status()
         return response
 
+    @requests_error_handler
     def update_user(self, id: str, body: dict) -> requests.Response:
         """
         Update an existing user.
@@ -377,8 +430,10 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.put(url, headers=headers, json=body)
+        response.raise_for_status()
         return response
 
+    @requests_error_handler
     def find_user_by_email(self, email: str) -> requests.Response:
         """
         Find a user by email.
@@ -395,6 +450,7 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.get(url, headers=headers, params={'filter': f'userName eq "{email}"'})
+        response.raise_for_status()
         return response
     
     def upsert_user(self, email:str, displayName:str, attributes:dict):
@@ -458,6 +514,7 @@ class OmniAPI:
         elif len(users) == 0:
             print(f'user {email} not found')
 
+    @requests_error_handler
     def delete_user_by_id(self, id:str):
         """
         Delete a user by their user ID.
@@ -472,8 +529,10 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.delete(f"{url}/{id}", headers=headers)
+        response.raise_for_status()
         return response
 
+    @requests_error_handler
     def document_export(self, id:str)->dict:
         """
         Export a document by its ID.
@@ -488,8 +547,10 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.get(url,headers=headers)
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def document_import(self, body:dict):
         """
         Import a document.
@@ -504,8 +565,10 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.post(url,headers=headers, json=body)
+        response.raise_for_status()
         return response
 
+    @requests_error_handler
     def list_folders(self, path:str='') -> dict:
         """
         List folders at the specified path.
@@ -525,8 +588,10 @@ class OmniAPI:
                                     'path': path,
                                     }
                                 )
+        response.raise_for_status()
         return response.json()
 
+    @requests_error_handler
     def list_documents(self, folderId:str='') -> dict:
         """
         List documents in the specified folder.
@@ -546,6 +611,7 @@ class OmniAPI:
                                     'folderId': folderId if folderId else None,
                                     }
                                 )
+        response.raise_for_status()
         return response.json() 
 
     @classmethod
@@ -565,6 +631,7 @@ class OmniAPI:
                 out.update({k:v})
         return out
 
+    @requests_error_handler
     def generate_embed_url(self,body:dict) -> dict:
         """
         Generate an embed URL.
@@ -579,4 +646,5 @@ class OmniAPI:
             'Content-Type': 'application/json'
         }
         response = requests.post(url, headers=headers, json=body)
+        response.raise_for_status()
         return response
