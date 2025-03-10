@@ -8,7 +8,6 @@ base_url = 'https://<<your omni host>>'
 # Initialize the API with your credentials
 api = OmniAPI(api_key, base_url)
 
-
 with open('users.csv', newline='') as csvfile:
     spamreader = csv.DictReader(csvfile)
     for row in spamreader:

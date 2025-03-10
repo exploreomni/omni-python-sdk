@@ -1,4 +1,4 @@
 op,email,display_name,is_admin,regions
 upsert,example@omni.co,"Omni Example",true,"[north,south,east]"
-upsert,example@omni.co,"Omni Example",true,"[north,south,east]"
-delete,example3@omni.co,"Omni Example 2",true,"[west]"
+upsert,example2@omni.co,"Omni Example 2",true,"[north,south,east]"
+delete,example3@omni.co,"Omni Example 3",true,"[west]"
