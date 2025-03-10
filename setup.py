@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name='omni_python_sdk',
-	version='0.1.6',
+	version='0.1.7',
 	description='A Python SDK for Omni API',
 	long_description=open('README.md').read(),
 	long_description_content_type='text/markdown',
@@ -13,7 +13,8 @@ setup(
 	install_requires=[
 		'requests',
 		'pyarrow',
-		'ndjson'
+		'ndjson',
+		'load-dotenv'
 	],
 	classifiers=[
 		'Programming Language :: Python :: 3',
