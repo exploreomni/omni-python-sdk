@@ -14,7 +14,7 @@ setup(
 		'requests',
 		'pyarrow',
 		'ndjson',
-		'load-dotenv'
+		'dotenv'
 	],
 	classifiers=[
 		'Programming Language :: Python :: 3',
