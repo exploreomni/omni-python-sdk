@@ -4,4 +4,4 @@ ndjson
 pandas
 matplotlib
 statsmodels
-omni_python_sdk
+load-dotenv
