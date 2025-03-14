@@ -49,6 +49,9 @@ class OmniAPI:
                 self.base_url = os.getenv('OMNI_BASE_URL')
             else: 
                 self.base_url = base_url
+        else:
+            self.api_key = api_key
+            self.base_url = base_url
         self._trim_base_url()
         self.headers = {
             'Authorization': f'Bearer {self.api_key}',
