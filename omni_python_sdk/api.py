@@ -1,15 +1,14 @@
+import os
+from dotenv import load_dotenv
 import requests
+import urllib.parse
 import pyarrow as pa
 import pyarrow.ipc as ipc
 import io
-import urllib.parse
-import json
-import ndjson
-import base64
+import json, ndjson, base64
 from typing import List, Tuple, Any, Union
-import os
-from dotenv import load_dotenv
-import functools
+import functools, collections
+
 
 def requests_error_handler(func):
     """
@@ -38,9 +37,39 @@ def requests_error_handler(func):
             return None
     return wrapper
 
+class memoized(object):
+   '''Decorator. Caches a function's return value each time it is called.
+   If called later with the same arguments, the cached value is returned
+   (not reevaluated).
+   '''
+   def __init__(self, func):
+      self.func = func
+      self.cache = {}
+   def __call__(self, *args):
+      if not isinstance(args, collections.abc.Hashable):
+         # uncacheable. a list, for instance.
+         # better to not cache than blow up.
+         return self.func(*args)
+      if args in self.cache:
+         return self.cache[args]
+      else:
+         value = self.func(*args)
+         self.cache[args] = value
+         return value
+   def __repr__(self):
+      '''Return the function's docstring.'''
+      return self.func.__doc__
+   def __get__(self, obj, objtype):
+      '''Support instance methods.'''
+      return functools.partial(self.__call__, obj)
+  
 class OmniAPI:
-    def __init__(self, api_key: str = '', base_url: str = "https://dev.thundersalmon.com",env_file: str = '.env'):
-        if load_dotenv(dotenv_path=env_file):
+    def __init__(self, api_key: str = '', base_url: str = '',env_file: str = '.env'):
+        
+        if api_key and base_url:
+            self.api_key = api_key
+            self.base_url = base_url
+        elif load_dotenv(dotenv_path=env_file):
             if os.getenv('OMNI_API_KEY'):
                 self.api_key = os.getenv('OMNI_API_KEY')
             else:
@@ -455,7 +484,29 @@ class OmniAPI:
         response.raise_for_status()
         return response
     
-    def upsert_user(self, email:str, displayName:str, attributes:dict):
+    def return_user_by_email(self, email: str) -> dict:
+        """
+        Find a user by email and return object
+        Args:
+            email (str): The email of the user to find.
+        Returns:
+            dict: A dictionary containing the user's ID and display name.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        response = self.find_user_by_email(email)
+        if response.status_code == 200:
+            users = response.json()['Resources']
+            if len(users) == 1:
+                return users[0]
+            else:
+                print(f"Found {len(users)} users for {email}")
+                return None
+        else:
+            print(f"Error finding user by email: {response.status_code}")
+            return None
+    
+    def upsert_user(self, email:str, displayName:str, attributes:dict, groups:List[str]=None):
         """
         Create a new user or update an existing user's information.
         Args:
@@ -595,7 +646,42 @@ class OmniAPI:
                                 )
         response.raise_for_status()
         return response.json() 
-
+    
+    @requests_error_handler
+    def list_groups(self, count:int=100,startIndex:int=1) -> dict:
+        """
+        List folders at the specified path.
+        Args:
+            count (int): The number of groups to return. Defaults to 100.
+            startIndex (int): An integer index that determines the starting point of the sorted result list. Defaults to 1.
+        Returns:
+            dict: A dictionary containing the list of folders.
+        """
+        url = f"{self.base_url}/api/scim/v2/groups"
+        response = requests.get(url, 
+                                headers=self.headers, 
+                                params={
+                                    'count': count,
+                                    'startIndex': startIndex
+                                    }
+                                )
+        response.raise_for_status()
+        return response.json()
+    
+    @requests_error_handler
+    def generate_embed_url(self,body:dict) -> dict:
+        """
+        Generate an embed URL.
+        Args:
+            body (dict): The request body containing necessary information for generating the embed URL.
+        Returns:
+            requests.Response: The response object containing the generated embed URL.
+        """
+        url = f"{self.base_url}/embed/sso/generate-url"
+        response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
+        return response
+    
     @classmethod
     def listify(cls, d:dict) -> dict:
         """
@@ -612,17 +698,103 @@ class OmniAPI:
             else:
                 out.update({k:v})
         return out
-
-    @requests_error_handler
-    def generate_embed_url(self,body:dict) -> dict:
+    
+    @memoized
+    def get_all_groups(self) -> List[dict]:
         """
-        Generate an embed URL.
-        Args:
-            body (dict): The request body containing necessary information for generating the embed URL.
+        Get all groups.
         Returns:
-            requests.Response: The response object containing the generated embed URL.
+            List[dict]: A list of dictionaries containing group information.
         """
-        url = f"{self.base_url}/embed/sso/generate-url"
-        response = requests.post(url, headers=self.headers, json=body)
+        groups = []
+        count = 100
+        startIndex = 1
+        while True:
+            response = self.list_groups(count, startIndex)
+            groups.extend(response['Resources'])
+            if response['totalResults'] <= startIndex:
+                break
+            startIndex += count
+        return groups
+    
+    @memoized
+    def get_group_id(self, group_name:str) -> Union[str,None]:
+        """
+        Get the ID of a group by its name.
+        Args:
+            group_name (str): The name of the group to get the ID for.
+        Returns:
+            Union[str,None]: The ID of the group if found, otherwise None.
+        """
+        groups = self.get_all_groups()
+        group = next((group for group in groups if group['displayName'] == group_name), None)
+        return group['id'] if group else None
+    
+    @requests_error_handler
+    def get_group(self, group_id:str) -> dict:
+        """
+        Get a group by its ID.
+        Args:
+            group_id (str): The ID of the group to get.
+        Returns:
+            dict: The group information.
+        """
+        url = f"{self.base_url}/api/scim/v2/groups/{group_id}"
+        response = requests.get(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+    
+    @requests_error_handler
+    def update_group(self, group_id:str, body:dict) -> requests.Response:
+        """
+        Update a group.
+        Args:
+            group_id (str): The ID of the group to update.
+            body (dict): The update body.
+        Returns:
+            requests.Response: The response object from the update operation.
+        """
+        url = f"{self.base_url}/api/scim/v2/groups/{group_id}"
+        response = requests.put(url, headers=self.headers, json=body)
         response.raise_for_status()
         return response
+    
+    @requests_error_handler
+    def add_user_to_group(self, group_name:str, user_id:str) -> requests.Response:
+        """
+        Add a user to a group.
+        Args:
+            group_name (str): The name of the group to add the user to.
+            user_id (str): The ID of the user to add.
+        Returns:
+            requests.Response: The response object from the add operation.
+        """
+        group_id = self.get_group_id(group_name)
+        if not group_id:
+            raise ValueError(f"Group '{group_name}' not found.")
+        group = self.get_group(group_id)
+        group['members'].append({
+            "display": '',
+            "value": user_id
+        })
+        return self.update_group(group_id, group)
+    
+    @requests_error_handler
+    def remove_user_from_group(self, group_name:str, user_id:str) -> requests.Response:
+        """
+        Remove a user from a group.
+        Args:
+            group_name (str): The name of the group to remove the user from.
+            user_id (str): The ID of the user to remove.
+        Returns:
+            requests.Response: The response object from the remove operation.
+        """
+        group_id = self.get_group_id(group_name)
+        if not group_id:
+            raise ValueError(f"Group '{group_name}' not found.")
+        group = self.get_group(group_id)
+        group['members'] = [member for member in group['members'] if member['value'] != user_id]
+        return self.update_group(group_id, group)
+    
+    
+    

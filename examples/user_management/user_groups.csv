@@ -1,0 +1,4 @@
+op,email,group_name
++,example@omni.co,"My Group 1"
++,example2@omni.co,"My Group 2"
+-,example3@omni.co,"My Group 3"
