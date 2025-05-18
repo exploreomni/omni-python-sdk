@@ -1,3 +1,4 @@
+import sys
 from omni_python_sdk import OmniAPI
 from pydantic import BaseModel
 from typing import List, Optional, Literal
@@ -309,14 +310,20 @@ class Topic(BaseModel):
         
         return semantic_view
 
-def main():
+def main(model_id: str, topic_name: str):
     client = OmniAPI()
 
-    response = client.get_topic("e87ab418-eec4-45d4-877f-cbd88d6c10dc", "order_items")
+    response = client.get_topic(model_id=model_id, topic_name=topic_name)
     
     topic = Topic.model_validate(response)
     semantic_view = topic.to_semantic_view()
     semantic_view.generate_sql()
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 3:
+        print("Usage: python snowflake_semantic_view.py <model_id> <topic_name>")
+        sys.exit(1)
+
+    model_id = sys.argv[1]
+    topic_name = sys.argv[2]
+    main(model_id, topic_name)
