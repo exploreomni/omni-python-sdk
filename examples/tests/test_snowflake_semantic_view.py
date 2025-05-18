@@ -26,7 +26,6 @@ class TestTopic(unittest.TestCase):
 
 class TestSnowflakeSemanticView(unittest.TestCase):
     file_path = "examples/tests/data/topic.json"
-
     # --- read straight into a dict ---
     with open(file_path, "r", encoding="utf-8") as f:
         json: dict = json.load(f)
@@ -37,7 +36,12 @@ class TestSnowflakeSemanticView(unittest.TestCase):
     def test_generate_sql(self):
         # Check if the generated SQL is a string
         sql = self.semantic_view.generate_sql()
-        print(sql)
+        self.assertIsInstance(sql, str)
+
+        expected_sql = "examples/tests/data/topic.sql"
+        with open(expected_sql, "r", encoding="utf-8") as f:
+            expected_sql_content = f.read()
+        self.assertEqual(sql.strip(), expected_sql_content.strip())
 
 if __name__ == "__main__":
     unittest.main()

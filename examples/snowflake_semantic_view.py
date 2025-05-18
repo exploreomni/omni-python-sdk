@@ -166,7 +166,6 @@ class SnowflakeSemanticView:
             sql = sql[:-2] + "\n)\n\n"
         if self.comment:
             sql += f"COMMENT = '{self.comment}';\n"
-        print(sql)
         return sql
 
 
