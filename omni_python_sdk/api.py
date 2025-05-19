@@ -321,6 +321,23 @@ class OmniAPI:
         response = requests.delete(url, headers=self.headers)
         response.raise_for_status()
         return response.json()
+    
+    @requests_error_handler
+    def get_topic(self, model_id: str, topic_name: str) -> dict:
+        """
+        Get a topic by its name.
+        Args:
+            model_id (str): The ID of the model.
+            topic_name (str): The name of the topic to get.
+        Returns:
+            dict: The topic information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._topic_url(model_id, topic_name)
+        response = requests.get(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()
 
     @requests_error_handler
     def create_view(self, model_id: str, view_name: str, body: dict) -> dict:
