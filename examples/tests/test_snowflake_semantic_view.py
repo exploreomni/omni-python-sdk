@@ -3,7 +3,7 @@ import json
 from examples.snowflake_semantic_view import Topic
 
 class TestTopic(unittest.TestCase):
-    file_path = "examples/tests/data/topic.json"
+    file_path = "examples/tests/data/order_items.topic.json"
 
     # --- read straight into a dict ---
     with open(file_path, "r", encoding="utf-8") as f:
@@ -22,10 +22,10 @@ class TestTopic(unittest.TestCase):
         semantic_view = topic.to_semantic_view()
         self.assertIsNotNone(semantic_view)
         self.assertEqual(semantic_view.name, "order_items")
-        self.assertEqual(len(semantic_view.tables), 2)
+        self.assertEqual(len(semantic_view.tables), 6)
 
 class TestSnowflakeSemanticView(unittest.TestCase):
-    file_path = "examples/tests/data/topic.json"
+    file_path = "examples/tests/data/order_items.topic.json"
     # --- read straight into a dict ---
     with open(file_path, "r", encoding="utf-8") as f:
         json: dict = json.load(f)
@@ -38,9 +38,10 @@ class TestSnowflakeSemanticView(unittest.TestCase):
         sql = self.semantic_view.generate_sql()
         self.assertIsInstance(sql, str)
 
-        expected_sql = "examples/tests/data/topic.sql"
+        expected_sql = "examples/tests/data/order_items.topic.sql"
         with open(expected_sql, "r", encoding="utf-8") as f:
             expected_sql_content = f.read()
+        print(sql)
         self.assertEqual(sql.strip(), expected_sql_content.strip())
 
 if __name__ == "__main__":

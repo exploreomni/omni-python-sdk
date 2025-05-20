@@ -336,8 +336,11 @@ class OmniAPI:
         """
         url = self._topic_url(model_id, topic_name)
         response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+
+        payload = response.json()
+        if not payload['success']:
+            response.raise_for_status()
+        return payload['topic']
 
     @requests_error_handler
     def create_view(self, model_id: str, view_name: str, body: dict) -> dict:

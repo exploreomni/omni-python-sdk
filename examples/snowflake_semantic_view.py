@@ -1,6 +1,6 @@
 import sys
 from omni_python_sdk import OmniAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Literal
 from enum import Enum
 
@@ -248,6 +248,13 @@ class OmniField(BaseModel):
             return self.clean_sql
         
     @property
+    def fully_qualified_field_name(self):
+        if self.view_name:
+            return f"{self.view_name}.{self.field_name}"
+        else:
+            return self.field_name
+        
+    @property
     def clean_sql(self):
         if self.sql:
             return remove_braces(self.sql)
@@ -256,7 +263,7 @@ class OmniField(BaseModel):
         else:
             # if not present make sql the column reference
             if self.is_dimension:
-                return f"{self.view_name}.{self.field_name}"
+                return self.fully_qualified_field_name
         
     
 class View(BaseModel):
@@ -264,17 +271,23 @@ class View(BaseModel):
     dimensions: List[OmniField]
     measures: List[OmniField]
     table_name: Optional[str] = None
-    schema: Optional[str] = None
+    
+    # renames the *attribute* to `schema_` so it doesn’t clash with BaseModel.schema(),
+    # but keeps the JSON key / constructor arg as plain "schema"
+    schema_: Optional[str] = Field(default=None, alias="schema")
     catalog: Optional[str] = None
     description: Optional[str] = None
     label: Optional[str] = None
     primary_key: Optional[List[FieldExpression]] = None
     aliases: Optional[List[str]] = None
 
+    # let View(**{"schema": "sales"}) work, and dump back as {"schema": ...}
+    model_config = ConfigDict(populate_by_name=True)
+
     @property
     def fully_scoped_table_name(self):
         catalog_str = f"{self.catalog}." if self.catalog else ""
-        schema_label_str = f"{self.schema}." if self.schema else ""
+        schema_label_str = f"{self.schema_}." if self.schema_ else ""
         table_name_str = f"{self.table_name}." if self.table_name else self.name
         return f"{catalog_str}{schema_label_str}{table_name_str}"
 
@@ -298,9 +311,9 @@ class Topic(BaseModel):
                 # skip parameterized dates
                 if dimension.date_type:
                     continue
-                semantic_view.add_dimension(dimension.field_name, dimension.clean_sql, synonyms=dimension.synonyms, comment=dimension.description)
+                semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.clean_sql, synonyms=dimension.synonyms, comment=dimension.description)
             for measure in view.measures:
-                semantic_view.add_metric(measure.field_name, measure.clean_sql, synonyms=measure.synonyms, comment=measure.description)
+                semantic_view.add_metric(measure.fully_qualified_field_name, measure.clean_sql, synonyms=measure.synonyms, comment=measure.description)
         
         for relationship in self.relationships:
             # skip relationships with foreign key to primary key
@@ -314,10 +327,9 @@ def main(model_id: str, topic_name: str):
     client = OmniAPI()
 
     response = client.get_topic(model_id=model_id, topic_name=topic_name)
-    
     topic = Topic.model_validate(response)
     semantic_view = topic.to_semantic_view()
-    semantic_view.generate_sql()
+    print(semantic_view.generate_sql())
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
