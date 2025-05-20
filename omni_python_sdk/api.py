@@ -816,5 +816,18 @@ class OmniAPI:
         group['members'] = [member for member in group['members'] if member['value'] != user_id]
         return self.update_group(group_id, group)
     
-    
+    @requests_error_handler
+    def get_model_yaml(self, model_id:str, filename:str=None) -> dict:
+        """
+        Get the YAML representation of a model.
+        Args:
+            model_id (str): The ID of the model to get.
+            filename (str, optional): The name of specific yaml file to return. Defaults to None.
+        Returns:
+            dict: The YAML representation of the model.
+        """
+        url = f"{self.base_url}/api/unstable/models/{model_id}/yaml"
+        response = requests.get(url, headers=self.headers, params={'filename': filename})
+        response.raise_for_status()
+        return response.json()
     
