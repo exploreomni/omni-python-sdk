@@ -111,19 +111,19 @@ dimensions:
   name: users.zip
 joins:
 - name: users
-  'on': ${order_items.user_id} = ${users.id}
+  'on': order_items.user_id = users.id
   source: public.users
 - name: inventory_items
-  'on': ${order_items.inventory_item_id} = ${inventory_items.id}
+  'on': order_items.inventory_item_id = inventory_items.id
   source: public.inventory_items
 - name: products
-  'on': ${inventory_items.product_id} = ${products.id}
+  'on': inventory_items.product_id = products.id
   source: public.products
 - name: distribution_centers
-  'on': ${products.distribution_center_id} = ${distribution_centers.id}
+  'on': products.distribution_center_id = distribution_centers.id
   source: public.distribution_centers
 - name: first_order_facts
-  'on': ${order_items.user_id} = ${first_order_facts.user_id}
+  'on': order_items.user_id = first_order_facts.user_id
   source: public.first_order_facts
 measures:
 - expr: COUNT(*)
@@ -132,7 +132,7 @@ measures:
   name: first_order_facts.count
 - expr: COUNT(*)
   name: inventory_items.count
-- expr: order_items.sale_price_sum / order_items.order_id_count_distinct
+- expr: Measure(order_items.sale_price_sum) / Measure(order_items.order_id_count_distinct)
   name: order_items.calculation
 - expr: MIN(order_items.created_at)
   name: order_items.created_at_min

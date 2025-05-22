@@ -1,3 +1,4 @@
+import re
 import yaml
 import sys
 from examples.topic import Topic
@@ -191,6 +192,10 @@ $$"""
         
         return sql
 
+# remove ${}
+def remove_braces(s: str) -> str:
+    return s.replace("${", "").replace("}", "")
+
 def metric_view_from_topic(topic: Topic) -> DatabricksMetricView:
     """
     Convert a Topic object to a DatabricksMetricView object.
@@ -206,16 +211,34 @@ def metric_view_from_topic(topic: Topic) -> DatabricksMetricView:
         raise ValueError(f"Base view {base_view_name} not found in topic {topic.name}")
     metric_view.set_comment(topic.description)
 
+    def transform_sql_references(sql: str) -> str:
+        # Example transformation: replace ${field_name} and ${view_name.field_name}
+        # with Measure(fully_qualified_field_name) if a measure
+        # Pattern to match ${field_name}
+        pattern = r"\$\{([^}]+)\}"
+        
+        def replace_field(match):
+            field_name = match.group(1)
+            # Check if the field is a measure or dimension
+            field = topic.find_field(field_name)
+            if field.is_dimension != True:
+                return f"Measure({field.fully_qualified_field_name})"
+            else:
+                # Remove the ${} from the SQL
+                return field.fully_qualified_field_name
+        return re.sub(pattern, replace_field, sql)
+
+    
     for view in topic.views:
         for dimension in view.dimensions:
             # skip parameterized dates
             if dimension.date_type:
                 continue
             # think about dimension.label if dimension.label else dimension.field_name
-            metric_view.add_dimension(dimension.fully_qualified_field_name, dimension.clean_sql, dimension.description)
+            metric_view.add_dimension(dimension.fully_qualified_field_name, dimension.transform_sql_references(transform_sql_references), dimension.description)
 
         for measure in view.measures:
-            metric_view.add_measure(measure.fully_qualified_field_name, measure.clean_sql, measure.description)
+            metric_view.add_measure(measure.fully_qualified_field_name, measure.transform_sql_references(transform_sql_references), measure.description)
 
     for relationship in topic.relationships:
         # Assuming the relationship is a join
@@ -224,7 +247,7 @@ def metric_view_from_topic(topic: Topic) -> DatabricksMetricView:
             metric_view.add_join(
                 name=right_view.name,
                 source=right_view.fully_scoped_table_name,
-                on=relationship.sql
+                on=transform_sql_references(relationship.sql)
             )
         else:
             raise ValueError(f"Right view {relationship.right_view_name} not found in topic {topic.name}")

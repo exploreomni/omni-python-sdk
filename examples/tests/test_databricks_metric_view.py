@@ -31,7 +31,7 @@ class TestDatabricksMetricView(unittest.TestCase):
         # Check if the generated YAML is a string
         yaml = self.metric_view.generate_yaml()
         self.assertIsInstance(yaml, str)
-        print(yaml)
+        
         expected_yaml = "examples/tests/data/order_items.databricks_metric_view.yaml"
         with open(expected_yaml, "r", encoding="utf-8") as f:
             expected_yaml_content = f.read()

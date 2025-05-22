@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Literal
+from typing import Callable, List, Optional, Literal
 from enum import Enum
 
 class FieldExpression(BaseModel):
@@ -51,9 +51,6 @@ class DataType(Enum):
     TIMESTAMP = 'TIMESTAMP'
     UNKNOWN = 'UNKNOWN'
 
-# remove ${}
-def remove_braces(s: str) -> str:
-    return s.replace("${", "").replace("}", "")
 
 class OmniField(BaseModel):
     fully_qualified_name: str
@@ -83,19 +80,23 @@ class OmniField(BaseModel):
             return f"{self.view_name}.{self.field_name}"
         else:
             return self.field_name
-        
+    
     @property
-    def clean_sql(self):
+    def effective_sql(self):
         if self.sql:
-            return remove_braces(self.sql)
+            return self.sql
         elif self.display_sql:
-            return remove_braces(self.display_sql)
+            return self.display_sql
         else:
             # if not present make sql the column reference
             if self.is_dimension:
                 return self.fully_qualified_field_name
-        
     
+    def transform_sql_references(self, transformation_function: Callable[[str], str]) -> str:
+        # Example transformation: replace ${field_name} and ${view_name.field_name}
+        # with transformation function
+        return transformation_function(self.effective_sql)
+
 class View(BaseModel):
     name: str
     dimensions: List[OmniField]
@@ -120,6 +121,15 @@ class View(BaseModel):
         schema_label_str = f"{self.schema_}." if self.schema_ else ""
         table_name_str = f"{self.table_name}." if self.table_name else self.name
         return f"{catalog_str}{schema_label_str}{table_name_str}"
+    
+    def find_field(self, field_name: str) -> Optional[OmniField]:
+        """
+        Find a field by name in the view.
+        """
+        for field in self.dimensions + self.measures:
+            if field.field_name == field_name:
+                return field
+        return None
 
 class Topic(BaseModel):
     name: str
@@ -139,4 +149,20 @@ class Topic(BaseModel):
         for view in self.views:
             if view.name == name:
                 return view
+        return None
+    
+    def find_field(self, name: str) -> Optional[OmniField]:
+        """
+        Find a field by name in the topic.
+        """
+        view_name, field_name = name.split(".")
+        if view_name:
+            view = self.find_view(view_name)
+            if view:
+                return view.find_field(field_name)
+        else:
+            for view in self.views:
+                field = view.find_field(field_name)
+                if field:
+                    return field
         return None

@@ -167,6 +167,10 @@ class SnowflakeSemanticView:
             sql += f"COMMENT = '{self.comment}';\n"
         return sql
 
+# remove ${}
+def remove_braces(s: str) -> str:
+    return s.replace("${", "").replace("}", "")
+
 def sematic_view_from_topic(topic):
     semantic_view = SnowflakeSemanticView(topic.name)
     
@@ -179,9 +183,9 @@ def sematic_view_from_topic(topic):
             # skip parameterized dates
             if dimension.date_type:
                 continue
-            semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.clean_sql, synonyms=dimension.synonyms, comment=dimension.description)
+            semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.transform_sql_references(remove_braces), synonyms=dimension.synonyms, comment=dimension.description)
         for measure in view.measures:
-            semantic_view.add_metric(measure.fully_qualified_field_name, measure.clean_sql, synonyms=measure.synonyms, comment=measure.description)
+            semantic_view.add_metric(measure.fully_qualified_field_name, measure.transform_sql_references(remove_braces), synonyms=measure.synonyms, comment=measure.description)
     
     for relationship in topic.relationships:
         # skip relationships without foreign key to primary key
