@@ -263,7 +263,7 @@ def main(model_id: str, topic_name: str):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python snowflake_semantic_view.py <model_id> <topic_name>")
+        print("Usage: python databricks_metric_view.py <model_id> <topic_name>")
         sys.exit(1)
 
     model_id = sys.argv[1]
