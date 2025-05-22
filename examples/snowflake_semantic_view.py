@@ -1,8 +1,6 @@
 import sys
+from examples.topic import Topic
 from omni_python_sdk import OmniAPI
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Literal
-from enum import Enum
 
 # Example of using the OmniAPI to get a topic definition and convert to a Snowflake semantic view
 # This example assumes you have a valid API key and base URL for the OmniAPI defined in your .env file
@@ -169,166 +167,36 @@ class SnowflakeSemanticView:
             sql += f"COMMENT = '{self.comment}';\n"
         return sql
 
-
-class FieldExpression(BaseModel):
-    type: Literal["field"]
-    field_name: str
-
-class EqualsParsedSqlExpression(BaseModel):
-    type: Literal["call"]
-    operator: Literal["SqlStdOperatorTable.EQUALS"]
-    operands: List[FieldExpression]
-
-class Relationship(BaseModel):
-    id: str
-    left_view_name: str
-    left_view_alias: Optional[str] = None
-    right_view_name: str
-    right_view_alias: Optional[str] = None
-    on: EqualsParsedSqlExpression
-    sql: str
-    join_type: str
-    type: str
-    ignored: Optional[bool] = None
-    bidirectional: Optional[bool] = None
-    extension_model_id: Optional[str] = None
-
-class AggregateType(Enum):
-    COUNT = "COUNT"
-    COUNT_DISTINCT = "COUNT_DISTINCT"
-    SUM = "SUM"
-    AVERAGE = "AVERAGE"
-    MIN = "MIN"
-    MAX = "MAX"
-    MEDIAN = "MEDIAN"
-    PERCENTILE = "PERCENTILE"
-    LIST = "LIST"
-    AVERAGE_DISTINCT_ON = "AVERAGE_DISTINCT_ON"
-    SUM_DISTINCT_ON = "SUM_DISTINCT_ON"
-    MEDIAN_DISTINCT_ON = "MEDIAN_DISTINCT_ON"
-    PERCENTILE_DISTINCT_ON = "PERCENTILE_DISTINCT_ON"
-
-class DataType(Enum):
-    ARRAY = 'ARRAY'
-    BOOLEAN = 'BOOLEAN'
-    INTERVAL = 'INTERVAL'
-    JSON = 'JSON'
-    NUMBER = 'NUMBER'
-    OTHER_UNGROUPABLE = 'OTHER_UNGROUPABLE'
-    STRING = 'STRING'
-    TIMESTAMP = 'TIMESTAMP'
-    UNKNOWN = 'UNKNOWN'
-
-
-# remove ${}
-def remove_braces(s: str) -> str:
-    return s.replace("${", "").replace("}", "")
-
-
-class OmniField(BaseModel):
-    fully_qualified_name: str
-    field_name: str
-    aggregate_type: Optional[AggregateType] = None
-    data_type: DataType
-    view_name: Optional[str] = None
-    sql: Optional[str] = None
-    display_sql: Optional[str] = None
-    description: Optional[str] = None
-    label: Optional[str] = None
-    is_dimension: Optional[bool] = None
-    ai_context: Optional[str] = None
-    synonyms: Optional[List[str]] = None
-    date_type: Optional[str] = None
-
-    @property
-    def aggregate_sql(self):
-        if self.aggregate_type:
-            return f"{self.aggregate_type.value}({self.clean_sql})"
-        else:
-            return self.clean_sql
-        
-    @property
-    def fully_qualified_field_name(self):
-        if self.view_name:
-            return f"{self.view_name}.{self.field_name}"
-        else:
-            return self.field_name
-        
-    @property
-    def clean_sql(self):
-        if self.sql:
-            return remove_braces(self.sql)
-        elif self.display_sql:
-            return remove_braces(self.display_sql)
-        else:
-            # if not present make sql the column reference
-            if self.is_dimension:
-                return self.fully_qualified_field_name
-        
+def sematic_view_from_topic(topic):
+    semantic_view = SnowflakeSemanticView(topic.name)
     
-class View(BaseModel):
-    name: str
-    dimensions: List[OmniField]
-    measures: List[OmniField]
-    table_name: Optional[str] = None
+    for view in topic.views:
+        # skip views without primary keys
+        if not view.primary_key[0].field_name:
+            continue
+        semantic_view.add_table(view.name, table_name=view.fully_scoped_table_name, primary_key=', '.join([k.field_name for k in view.primary_key]), synonyms=view.aliases, comment=view.description)
+        for dimension in view.dimensions:
+            # skip parameterized dates
+            if dimension.date_type:
+                continue
+            semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.clean_sql, synonyms=dimension.synonyms, comment=dimension.description)
+        for measure in view.measures:
+            semantic_view.add_metric(measure.fully_qualified_field_name, measure.clean_sql, synonyms=measure.synonyms, comment=measure.description)
     
-    # renames the *attribute* to `schema_` so it doesn’t clash with BaseModel.schema(),
-    # but keeps the JSON key / constructor arg as plain "schema"
-    schema_: Optional[str] = Field(default=None, alias="schema")
-    catalog: Optional[str] = None
-    description: Optional[str] = None
-    label: Optional[str] = None
-    primary_key: Optional[List[FieldExpression]] = None
-    aliases: Optional[List[str]] = None
-
-    # let View(**{"schema": "sales"}) work, and dump back as {"schema": ...}
-    model_config = ConfigDict(populate_by_name=True)
-
-    @property
-    def fully_scoped_table_name(self):
-        catalog_str = f"{self.catalog}." if self.catalog else ""
-        schema_label_str = f"{self.schema_}." if self.schema_ else ""
-        table_name_str = f"{self.table_name}." if self.table_name else self.name
-        return f"{catalog_str}{schema_label_str}{table_name_str}"
-
-class Topic(BaseModel):
-    name: str
-    relationships: List[Relationship]
-    views: List[View]
-
-    # ignore unknown keys rather than error
-    model_config = {"extra": "ignore"}
-
-    def to_semantic_view(self):
-        semantic_view = SnowflakeSemanticView(self.name)
-        
-        for view in self.views:
-            # skip views without primary keys
-            if not view.primary_key[0].field_name:
-                continue
-            semantic_view.add_table(view.name, table_name=view.fully_scoped_table_name, primary_key=', '.join([k.field_name for k in view.primary_key]), synonyms=view.aliases, comment=view.description)
-            for dimension in view.dimensions:
-                # skip parameterized dates
-                if dimension.date_type:
-                    continue
-                semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.clean_sql, synonyms=dimension.synonyms, comment=dimension.description)
-            for measure in view.measures:
-                semantic_view.add_metric(measure.fully_qualified_field_name, measure.clean_sql, synonyms=measure.synonyms, comment=measure.description)
-        
-        for relationship in self.relationships:
-            # skip relationships with foreign key to primary key
-            if not relationship.on.operands[0].field_name:
-                continue
-            semantic_view.add_relationship(relationship.id, relationship.left_view_name, relationship.on.operands[0].field_name, relationship.right_view_name)
-        
-        return semantic_view
+    for relationship in topic.relationships:
+        # skip relationships without foreign key to primary key
+        if not relationship.on.operands[0].field_name:
+            continue
+        semantic_view.add_relationship(relationship.id, relationship.left_view_name, relationship.on.operands[0].field_name, relationship.right_view_name)
+    
+    return semantic_view
 
 def main(model_id: str, topic_name: str):
     client = OmniAPI()
 
     response = client.get_topic(model_id=model_id, topic_name=topic_name)
     topic = Topic.model_validate(response)
-    semantic_view = topic.to_semantic_view()
+    semantic_view = sematic_view_from_topic(topic)
     print(semantic_view.generate_sql())
 
 if __name__ == "__main__":
