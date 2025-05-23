@@ -116,14 +116,15 @@ class SnowflakeSemanticView:
         self.comment = comment
 
     def generate_sql(self):
-        sql = f"CREATE SEMANTIC VIEW {self.name}\n\n"
+        sql = f"CREATE SEMANTIC VIEW OMNI__{self.name}\n\n"
 
         if self.tables:
             sql += "TABLES (\n"
             for table in self.tables:
                 sql += f"  {table['name']} AS {table['table_name']}\n"
-                if table.get("primary_key"):
-                    sql += f"    PRIMARY KEY ({table['primary_key']})"
+                primary_key = table.get("primary_key").split(".")[1]
+                if primary_key:
+                    sql += f"    PRIMARY KEY ({primary_key})"
                 if table.get("synonyms"):
                     sql += f"    WITH SYNONYMS ({', '.join(table['synonyms'])})"
                 if table.get("comment"):
@@ -134,8 +135,9 @@ class SnowflakeSemanticView:
         if self.relationships:
             sql += "RELATIONSHIPS (\n"
             for relationship in self.relationships:
+                key = relationship.get("source_column").split(".")[1]
                 sql += f"  {relationship['name']} AS\n"
-                sql += f"    {relationship['source_table']} ({relationship['source_column']}) REFERENCES {relationship['target_table']},\n"
+                sql += f"    {relationship['source_table']} ({key}) REFERENCES {relationship['target_table']},\n"
             sql = sql[:-2] + "\n)\n\n"
         if self.facts:
             sql += "FACTS (\n"
@@ -171,6 +173,12 @@ class SnowflakeSemanticView:
 def remove_braces(s: str) -> str:
     return s.replace("${", "").replace("}", "")
 
+def swap_omni_operators(s: str) -> str:
+    return s.replace("OMNI_", "")
+
+def transform_sql(s: str) -> str:
+    return swap_omni_operators(remove_braces(s))
+
 def sematic_view_from_topic(topic):
     semantic_view = SnowflakeSemanticView(topic.name)
     
@@ -183,9 +191,9 @@ def sematic_view_from_topic(topic):
             # skip parameterized dates
             if dimension.date_type:
                 continue
-            semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.transform_sql_references(remove_braces), synonyms=dimension.synonyms, comment=dimension.description)
+            semantic_view.add_dimension(dimension.fully_qualified_field_name, dimension.transform_sql_references(transform_sql), synonyms=dimension.synonyms, comment=dimension.description)
         for measure in view.measures:
-            semantic_view.add_metric(measure.fully_qualified_field_name, measure.transform_sql_references(remove_braces), synonyms=measure.synonyms, comment=measure.description)
+            semantic_view.add_metric(measure.fully_qualified_field_name, measure.transform_sql_references(transform_sql), synonyms=measure.synonyms, comment=measure.description)
     
     for relationship in topic.relationships:
         # skip relationships without foreign key to primary key
