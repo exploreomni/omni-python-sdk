@@ -60,6 +60,7 @@ class OmniField(BaseModel):
     view_name: Optional[str] = None
     sql: Optional[str] = None
     display_sql: Optional[str] = None
+    dialect_sql: Optional[str] = None
     description: Optional[str] = None
     label: Optional[str] = None
     is_dimension: Optional[bool] = None
@@ -83,6 +84,8 @@ class OmniField(BaseModel):
     
     @property
     def effective_sql(self):
+        if self.dialect_sql:
+            return self.dialect_sql
         if self.sql:
             return self.sql
         elif self.display_sql:

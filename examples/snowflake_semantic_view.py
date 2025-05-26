@@ -173,11 +173,8 @@ class SnowflakeSemanticView:
 def remove_braces(s: str) -> str:
     return s.replace("${", "").replace("}", "")
 
-def swap_omni_operators(s: str) -> str:
-    return s.replace("OMNI_", "")
-
 def transform_sql(s: str) -> str:
-    return swap_omni_operators(remove_braces(s))
+    return remove_braces(s)
 
 def sematic_view_from_topic(topic):
     semantic_view = SnowflakeSemanticView(topic.name)
