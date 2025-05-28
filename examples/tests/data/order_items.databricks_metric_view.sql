@@ -136,15 +136,15 @@ measures:
   name: order_items.calculation
 - expr: MIN(order_items.created_at)
   name: order_items.created_at_min
-- expr: OMNI_SUM(order_items.margin)
+- expr: SUM(order_items.margin)
   name: order_items.margin_sum
 - expr: COUNT(*)
   name: order_items.count
 - expr: COUNT(DISTINCT order_items.order_id)
   name: order_items.order_id_count_distinct
-- expr: OMNI_SUM(order_items.sale_price)
+- expr: SUM(order_items.sale_price)
   name: order_items.sale_price_sum
-- expr: OMNI_SUM(products.cost)
+- expr: SUM(products.cost)
   name: products.cost_sum
 - expr: COUNT(*)
   name: products.count
