@@ -1,31 +1,31 @@
-CREATE SEMANTIC VIEW order_items
+CREATE SEMANTIC VIEW OMNI__order_items
 
 TABLES (
   distribution_centers AS public.distribution_centers
-    PRIMARY KEY (distribution_centers.id),
+    PRIMARY KEY (id),
   first_order_facts AS public.first_order_facts
-    PRIMARY KEY (first_order_facts.user_id),
+    PRIMARY KEY (user_id),
   inventory_items AS public.inventory_items
-    PRIMARY KEY (inventory_items.id),
+    PRIMARY KEY (id),
   order_items AS public.order_items
-    PRIMARY KEY (order_items.id),
+    PRIMARY KEY (id),
   products AS public.products
-    PRIMARY KEY (products.id),
+    PRIMARY KEY (id),
   users AS public.users
-    PRIMARY KEY (users.id)
+    PRIMARY KEY (id)
 )
 
 RELATIONSHIPS (
   order_items_users AS
-    order_items (order_items.user_id) REFERENCES users,
+    order_items (user_id) REFERENCES users,
   order_items_inventory_items AS
-    order_items (order_items.inventory_item_id) REFERENCES inventory_items,
+    order_items (inventory_item_id) REFERENCES inventory_items,
   inventory_items_products AS
-    inventory_items (inventory_items.product_id) REFERENCES products,
+    inventory_items (product_id) REFERENCES products,
   products_distribution_centers AS
-    products (products.distribution_center_id) REFERENCES distribution_centers,
+    products (distribution_center_id) REFERENCES distribution_centers,
   order_items_first_order_facts AS
-    order_items (order_items.user_id) REFERENCES first_order_facts
+    order_items (user_id) REFERENCES first_order_facts
 )
 
 DIMENSIONS (
@@ -89,11 +89,11 @@ METRICS (
   inventory_items.count AS COUNT(*),
   order_items.calculation AS order_items.sale_price_sum / order_items.order_id_count_distinct,
   order_items.created_at_min AS MIN(order_items.created_at),
-  order_items.margin_sum AS OMNI_SUM(order_items.margin),
+  order_items.margin_sum AS SUM(order_items.margin),
   order_items.count AS COUNT(*),
   order_items.order_id_count_distinct AS COUNT(DISTINCT order_items.order_id),
-  order_items.sale_price_sum AS OMNI_SUM(order_items.sale_price),
-  products.cost_sum AS OMNI_SUM(products.cost),
+  order_items.sale_price_sum AS SUM(order_items.sale_price),
+  products.cost_sum AS SUM(products.cost),
   products.count AS COUNT(*),
   users.count AS COUNT(*)
 )
