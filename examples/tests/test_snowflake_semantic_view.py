@@ -17,7 +17,7 @@ class TestTopicToSemanticView(unittest.TestCase):
         self.assertIsNotNone(semantic_view)
         self.assertEqual(semantic_view.name, "order_items")
         self.assertEqual(len(semantic_view.tables), 6)
-
+ 
 class TestSnowflakeSemanticView(unittest.TestCase):
     file_path = "examples/tests/data/order_items.topic.json"
     # --- read straight into a dict ---
