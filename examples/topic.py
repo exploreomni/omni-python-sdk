@@ -122,7 +122,7 @@ class View(BaseModel):
     def fully_scoped_table_name(self):
         catalog_str = f"{self.catalog}." if self.catalog else ""
         schema_label_str = f"{self.schema_}." if self.schema_ else ""
-        table_name_str = f"{self.table_name}." if self.table_name else self.name
+        table_name_str = f"{self.table_name}" if self.table_name else self.name
         return f"{catalog_str}{schema_label_str}{table_name_str}"
     
     def find_field(self, field_name: str) -> Optional[OmniField]:
