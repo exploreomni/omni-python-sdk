@@ -82,8 +82,7 @@ class OmniField(BaseModel):
         else:
             return self.field_name
     
-    @property
-    def effective_sql(self):
+    def effective_sql(self, base_view_name: Optional[str] = None):
         if self.dialect_sql:
             return self.dialect_sql
         if self.sql:
@@ -93,12 +92,15 @@ class OmniField(BaseModel):
         else:
             # if not present make sql the column reference
             if self.is_dimension:
-                return self.fully_qualified_field_name
+                if base_view_name and self.view_name == base_view_name:
+                    return self.field_name
+                else:
+                    return self.fully_qualified_field_name
     
-    def transform_sql_references(self, transformation_function: Callable[[str], str]) -> str:
+    def transform_sql_references(self, transformation_function: Callable[[str], str], base_view_name: Optional[str] = None) -> str:
         # Example transformation: replace ${field_name} and ${view_name.field_name}
         # with transformation function
-        return transformation_function(self.effective_sql)
+        return transformation_function(self.effective_sql(base_view_name))
 
 class View(BaseModel):
     name: str
@@ -118,11 +120,10 @@ class View(BaseModel):
     # let View(**{"schema": "sales"}) work, and dump back as {"schema": ...}
     model_config = ConfigDict(populate_by_name=True)
 
-    @property
-    def fully_scoped_table_name(self):
-        catalog_str = f"{self.catalog}." if self.catalog else ""
-        schema_label_str = f"{self.schema_}." if self.schema_ else ""
-        table_name_str = f"{self.table_name}." if self.table_name else self.name
+    def fully_scoped_table_name(self, default_catalog: Optional[str] = None, default_schema: Optional[str] = None):
+        catalog_str = f"{self.catalog}." if self.catalog else f"{default_catalog}." if default_catalog else ""
+        schema_label_str = f"{self.schema_}." if self.schema_ else f"{default_schema}." if default_schema else ""
+        table_name_str = f"{self.table_name}" if self.table_name else self.name
         return f"{catalog_str}{schema_label_str}{table_name_str}"
     
     def find_field(self, field_name: str) -> Optional[OmniField]:

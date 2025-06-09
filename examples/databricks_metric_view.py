@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 import yaml
 import sys
 from examples.topic import Topic
@@ -63,8 +64,10 @@ class DatabricksMetricView:
     Class to create a metric view in Databricks using the YAML format.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, default_catalog: Optional[str], default_schema: Optional[str]):
         self.name = name
+        self.default_catalog = default_catalog
+        self.default_schema = default_schema
         self.version = "0.1"
         # Can be either a fully qualified table-like asset or any SQL query.
         self.source = None
@@ -181,7 +184,7 @@ class DatabricksMetricView:
         )
         
         sql = f"""
-CREATE VIEW `{self.name}`
+CREATE OR REPLACE VIEW `OMNI__{self.name}`
 ({column_list})
 WITH METRICS
 LANGUAGE YAML
@@ -192,21 +195,25 @@ $$"""
         
         return sql
 
-# remove ${}
-def remove_braces(s: str) -> str:
-    return s.replace("${", "").replace("}", "")
+def transform_name(name: str) -> str:
+    """
+    Transform the name to be used in the metric view.
+    This function can be customized to apply any naming conventions.
+    """
+    # Example transformation: replace . with underscores and convert to lowercase
+    return name.replace(".", "__").lower()
 
-def metric_view_from_topic(topic: Topic) -> DatabricksMetricView:
+def metric_view_from_topic(topic: Topic, default_catalog: Optional[str], default_schema: Optional[str], enable_joins: bool = False) -> DatabricksMetricView:
     """
     Convert a Topic object to a DatabricksMetricView object.
     """
-    metric_view = DatabricksMetricView(name=topic.name)
+    metric_view = DatabricksMetricView(name=topic.name, default_catalog=default_catalog, default_schema=default_schema)
 
     # find the base view
     base_view_name = topic.base_view_name if topic.base_view_name else topic.name
     base_view = topic.find_view(base_view_name)
     if base_view:
-        metric_view.set_source(base_view.fully_scoped_table_name)
+        metric_view.set_source(base_view.fully_scoped_table_name(default_catalog, default_schema))
     else:
         raise ValueError(f"Base view {base_view_name} not found in topic {topic.name}")
     metric_view.set_comment(topic.description)
@@ -222,50 +229,56 @@ def metric_view_from_topic(topic: Topic) -> DatabricksMetricView:
             # Check if the field is a measure or dimension
             field = topic.find_field(field_name)
             if field.is_dimension != True:
-                return f"Measure({field.fully_qualified_field_name})"
+                return f"Measure({transform_name(field.fully_qualified_field_name)})"
             else:
                 # Remove the ${} from the SQL
-                return field.fully_qualified_field_name
+                return transform_name(field.fully_qualified_field_name)
         return re.sub(pattern, replace_field, sql)
 
     
     for view in topic.views:
+        # skip views that are not the base view if joins are not enabled
+        if not enable_joins and view.name != base_view_name:
+            continue
         for dimension in view.dimensions:
             # skip parameterized dates
             if dimension.date_type:
                 continue
-            # think about dimension.label if dimension.label else dimension.field_name
-            metric_view.add_dimension(dimension.fully_qualified_field_name, dimension.transform_sql_references(transform_sql_references), dimension.description)
+            metric_view.add_dimension(transform_name(dimension.fully_qualified_field_name), dimension.transform_sql_references(transform_sql_references, base_view_name=base_view_name), dimension.description)
 
         for measure in view.measures:
-            metric_view.add_measure(measure.fully_qualified_field_name, measure.transform_sql_references(transform_sql_references), measure.description)
+            metric_view.add_measure(transform_name(measure.fully_qualified_field_name), measure.transform_sql_references(transform_sql_references), measure.description)
 
-    for relationship in topic.relationships:
-        # Assuming the relationship is a join
-        right_view = topic.find_view(relationship.right_view_name)
-        if right_view:
-            metric_view.add_join(
-                name=right_view.name,
-                source=right_view.fully_scoped_table_name,
-                on=transform_sql_references(relationship.sql)
-            )
-        else:
-            raise ValueError(f"Right view {relationship.right_view_name} not found in topic {topic.name}")
+    if enable_joins:
+        for relationship in topic.relationships:
+            # Assuming the relationship is a join
+            right_view = topic.find_view(relationship.right_view_name)
+            if right_view:
+                metric_view.add_join(
+                    name=right_view.name,
+                    source=right_view.fully_scoped_table_name,
+                    on=transform_sql_references(relationship.sql)
+                )
+            else:
+                raise ValueError(f"Right view {relationship.right_view_name} not found in topic {topic.name}")
     return metric_view
 
-def main(model_id: str, topic_name: str):
+def main(model_id: str, topic_name: str, default_catalog: Optional[str], default_schema: Optional[str]):
     client = OmniAPI()
 
     response = client.get_topic(model_id=model_id, topic_name=topic_name)
     topic = Topic.model_validate(response)
-    metric_view = metric_view_from_topic(topic)
+    metric_view = metric_view_from_topic(topic, default_catalog, default_schema)
     print(metric_view.generate_sql())
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python databricks_metric_view.py <model_id> <topic_name>")
+    num_args = len(sys.argv)
+    if not (num_args >= 3 and num_args < 6):
+        print("Usage: python databricks_metric_view.py <model_id> <topic_name> <default_catalog> <default_schema>")
         sys.exit(1)
 
     model_id = sys.argv[1]
     topic_name = sys.argv[2]
-    main(model_id, topic_name)
+    default_catalog = sys.argv[3] if num_args > 3 else None
+    default_schema = sys.argv[4] if num_args > 4 else None
+    main(model_id, topic_name, default_catalog, default_schema)
