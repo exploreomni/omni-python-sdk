@@ -7,7 +7,7 @@ from omni_python_sdk import OmniAPI
 
 #  https://docs.snowflake.com/en/user-guide/views-semantic/sql#label-semantic-views-create
 
-# CREATE SEMANTIC VIEW tpch_rev_analysis
+# CREATE OR REPLACE SEMANTIC VIEW tpch_rev_analysis
 
 #   TABLES (
 #     orders AS SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS
@@ -116,7 +116,7 @@ class SnowflakeSemanticView:
         self.comment = comment
 
     def generate_sql(self):
-        sql = f"CREATE SEMANTIC VIEW OMNI__{self.name}\n\n"
+        sql = f"CREATE OR REPLACE SEMANTIC VIEW OMNI__{self.name}\n\n"
 
         if self.tables:
             sql += "TABLES (\n"

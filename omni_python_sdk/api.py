@@ -103,7 +103,7 @@ class OmniAPI:
             self.base_url = self.base_url[:-13]
             
     @requests_error_handler
-    def wait_query_blocking(self, remaining_job_ids: List[str]) -> Tuple[Any, bool]:
+    def wait_query_blocking(self, remaining_job_ids: List[str], version:str='v1') -> Tuple[Any, bool]:
         """
         Wait for query jobs to complete.
         Args:
@@ -117,7 +117,7 @@ class OmniAPI:
         remaining_job_ids: List[str] - the list of job ids to wait for
         Wait for a query to complete by providing a list of job ids.
         '''
-        url = f"{self.base_url}/api/unstable/query/wait"
+        url = f"{self.base_url}/api/{version}/query/wait"
         
         # URL encode the query parameter
         encoded_query = urllib.parse.urlencode({'job_ids': json.dumps(remaining_job_ids)})
@@ -133,7 +133,7 @@ class OmniAPI:
             response.raise_for_status()
 
     @requests_error_handler
-    def run_query_blocking(self, body: dict) -> Tuple[pa.Table, List[dict]]:
+    def run_query_blocking(self, body: dict, version:str='v1') -> Tuple[pa.Table, List[dict]]:
         """
         Run a query and wait for its completion.
         Args:
@@ -144,7 +144,7 @@ class OmniAPI:
             ValueError: If no result is found in the response.
             requests.exceptions.RequestException: If the API request fails.
         """
-        url = f"{self.base_url}/api/unstable/query/run"
+        url = f"{self.base_url}/api/{version}/query/run"
         response = requests.post(url, headers=self.headers, json=body)
     
         if response.status_code == 200:
@@ -168,295 +168,8 @@ class OmniAPI:
         else:
             response.raise_for_status()
 
-    def _base_model_url(self) -> str:
-        """
-        Get the base URL for model operations.
-        Returns:
-            str: The base URL for model operations.
-        """
-        return f"{self.base_url}/api/unstable/model"
-
-    def _model_url(self, model_id: str) -> str:
-        """
-        Get the URL for a specific model.
-        Args:
-            model_id (str): The ID of the model.
-        Returns:
-            str: The URL for the specified model.
-        """
-        return f"{self._base_model_url()}/{model_id}"
-
-    def _base_topic_url(self, model_id: str) -> str:
-        """
-        Get the base URL for topic operations.
-        Args:
-            model_id (str): The ID of the model.
-        Returns:
-            str: The base URL for topic operations.
-        """
-        return f"{self._model_url(model_id)}/topic"
-
-    def _topic_url(self, model_id: str, topic_name: str) -> str:
-        """
-        Get the URL for a specific topic.
-        Args:
-            model_id (str): The ID of the model.
-            topic_name (str): The name of the topic.
-        Returns:
-            str: The URL for the specified topic.
-        """
-        return f"{self._base_topic_url(model_id)}/{topic_name}"
-
-    def _base_view_url(self, model_id: str) -> str:
-        """
-        Get the base URL for view operations.
-        Args:
-            model_id (str): The ID of the model.
-        Returns:
-            str: The base URL for view operations.
-        """
-        return f"{self._base_model_url()}/{model_id}/view"
-
-    def _view_url(self, model_id: str, view_name: str) -> str:
-        """
-        Get the URL for a specific view.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view.
-        Returns:
-            str: The URL for the specified view.
-        """
-        return f"{self._base_model_url(model_id)}/{view_name}"
-
-    def _base_field_url(self, model_id: str) -> str:
-        """
-        Get the base URL for field operations.
-        Args:
-            model_id (str): The ID of the model.
-        Returns:
-            str: The base URL for field operations.
-        """
-        return f"{self._base_view_url(model_id)}/field"
-
-    def _field_url(self, model_id: str, view_name: str, field_name: str) -> str:
-        """
-        Get the URL for a specific field.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view.
-            field_name (str): The name of the field.
-        Returns:
-            str: The URL for the specified field.
-        """
-        return f"{self._view_url(model_id, view_name)}/field/{field_name}"
-    
     @requests_error_handler
-    def create_model(self, connection_id: str, body: dict) -> dict:
-        """
-        Create a new model.
-        Args:
-            connection_id (str): The connection ID.
-            body (dict): The model creation body.
-        Returns:
-            dict: The created model information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._base_model_url()
-        body["connectionId"] = connection_id
-        response = requests.post(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def create_topic(self, model_id: str, base_view_name: str, body: dict) -> dict:
-        """
-        Create a new topic.
-        Args:
-            model_id (str): The ID of the model.
-            base_view_name (str): The name of the base view.
-            body (dict): The topic creation body.
-        Returns:
-            dict: The created topic information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._base_topic_url(model_id)
-        body["baseViewName"] = base_view_name
-        response = requests.post(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def update_topic(self, model_id: str, topic_name: str, body: dict) -> dict:
-        """
-        Update an existing topic.
-        Args:
-            model_id (str): The ID of the model.
-            topic_name (str): The name of the topic to update.
-            body (dict): The topic update body.
-        Returns:
-            dict: The updated topic information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._topic_url(model_id, topic_name)
-        response = requests.patch(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def delete_topic(self, model_id: str, topic_name: str) -> dict:
-        """
-        Delete a topic.
-        Args:
-            model_id (str): The ID of the model.
-            topic_name (str): The name of the topic to delete.
-        Returns:
-            dict: The response from the delete operation.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._topic_url(model_id, topic_name)
-        response = requests.delete(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
-    
-    @requests_error_handler
-    def get_topic(self, model_id: str, topic_name: str) -> dict:
-        """
-        Get a topic by its name.
-        Args:
-            model_id (str): The ID of the model.
-            topic_name (str): The name of the topic to get.
-        Returns:
-            dict: The topic information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._topic_url(model_id, topic_name)
-        response = requests.get(url, headers=self.headers)
-
-        payload = response.json()
-        if not payload['success']:
-            response.raise_for_status()
-        return payload['topic']
-
-    @requests_error_handler
-    def create_view(self, model_id: str, view_name: str, body: dict) -> dict:
-        """
-        Create a new view.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view to create.
-            body (dict): The view creation body.
-        Returns:
-            dict: The created view information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._base_view_url(model_id)
-        body["viewName"] = view_name
-        response = requests.post(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def update_view(self, model_id: str, view_name: str, body: dict) -> dict:
-        """
-        Update an existing view.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view to update.
-            body (dict): The view update body.
-        Returns:
-            dict: The updated view information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._view_url(model_id, view_name)
-        body["viewName"] = view_name
-        response = requests.patch(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def delete_view(self, model_id: str, view_name: str) -> dict:
-        """
-        Delete a view.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view to delete.
-        Returns:
-            dict: The response from the delete operation.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._view_url(model_id, view_name)
-        response = requests.delete(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def create_field(self, model_id: str, view_name: str, field_name: str, body: dict) -> dict:
-        """
-        Create a new field.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view.
-            field_name (str): The name of the field to create.
-            body (dict): The field creation body.
-        Returns:
-            dict: The created field information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._base_field_url(model_id)
-        body["fieldName"] = field_name
-        body["viewName"] = view_name
-        response = requests.post(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def update_field(self, model_id: str, view_name: str, field_name: str, body: dict) -> dict:
-        """
-        Update an existing field.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view.
-            field_name (str): The name of the field to update.
-            body (dict): The field update body.
-        Returns:
-            dict: The updated field information.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._field_url(model_id, view_name, field_name)
-        response = requests.patch(url, headers=self.headers, json=body)
-        response.raise_for_status()
-        return response.json()
-    
-    @requests_error_handler
-    def delete_field(self, model_id: str, view_name: str, field_name: str) -> dict:
-        """
-        Delete a field.
-        Args:
-            model_id (str): The ID of the model.
-            view_name (str): The name of the view.
-            field_name (str): The name of the field to delete.
-        Returns:
-            dict: The response from the delete operation.
-        Raises:
-            requests.exceptions.RequestException: If the API request fails.
-        """
-        url = self._field_url(model_id, view_name, field_name)
-        response = requests.delete(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
-
-    @requests_error_handler
-    def create_user(self, body: dict) -> requests.Response:
+    def create_user(self, body: dict, version:str='v2') -> requests.Response:
         """
         Create a new user.
         Args:
@@ -466,13 +179,13 @@ class OmniAPI:
         Raises:
             requests.exceptions.RequestException: If the API request fails.
         """
-        url = f"{self.base_url}/api/scim/v2/users"
+        url = f"{self.base_url}/api/scim/{version}/users"
         response = requests.post(url, headers=self.headers, json=body)
         response.raise_for_status()
         return response
 
     @requests_error_handler
-    def update_user(self, id: str, body: dict) -> requests.Response:
+    def update_user(self, id: str, body: dict, version:str='v2') -> requests.Response:
         """
         Update an existing user.
         Args:
@@ -483,13 +196,13 @@ class OmniAPI:
         Raises:
             requests.exceptions.RequestException: If the API request fails.
         """
-        url = f"{self.base_url}/api/scim/v2/users/{id}"
+        url = f"{self.base_url}/api/scim/{version}/users/{id}"
         response = requests.put(url, headers=self.headers, json=body)
         response.raise_for_status()
         return response
 
     @requests_error_handler
-    def find_user_by_email(self, email: str) -> requests.Response:
+    def find_user_by_email(self, email: str, version:str='v2') -> requests.Response:
         """
         Find a user by email.
         Args:
@@ -499,7 +212,7 @@ class OmniAPI:
         Raises:
             requests.exceptions.RequestException: If the API request fails.
         """
-        url = f"{self.base_url}/api/scim/v2/users"
+        url = f"{self.base_url}/api/scim/{version}/users"
         response = requests.get(url, headers=self.headers, params={'filter': f'userName eq "{email}"'})
         response.raise_for_status()
         return response
@@ -588,7 +301,7 @@ class OmniAPI:
             print(f'user {email} not found')
 
     @requests_error_handler
-    def delete_user_by_id(self, id:str):
+    def delete_user_by_id(self, id:str, version:str='v2'):
         """
         Delete a user by their user ID.
         Args:
@@ -596,13 +309,13 @@ class OmniAPI:
         Returns:
             requests.Response: The response object from the delete operation.
         """
-        url = f"{self.base_url}/api/scim/v2/users"
+        url = f"{self.base_url}/api/scim/{version}/users"
         response = requests.delete(f"{url}/{id}", headers=self.headers)
         response.raise_for_status()
         return response
 
     @requests_error_handler
-    def document_export(self, id:str)->dict:
+    def document_export(self, id:str, version:str='unstable')->dict:
         """
         Export a document by its ID.
         Args:
@@ -610,13 +323,13 @@ class OmniAPI:
         Returns:
             dict: The exported document data as a dictionary.
         """
-        url = f"{self.base_url}/api/unstable/documents/{id}/export"
+        url = f"{self.base_url}/api/{version}/documents/{id}/export"
         response = requests.get(url,headers=self.headers)
         response.raise_for_status()
         return response.json()
 
     @requests_error_handler
-    def document_import(self, body:dict):
+    def document_import(self, body:dict, version:str='unstable') -> requests.Response:
         """
         Import a document.
         Args:
@@ -624,13 +337,13 @@ class OmniAPI:
         Returns:
             requests.Response: The response object from the import operation.
         """
-        url = f"{self.base_url}/api/unstable/documents/import"
+        url = f"{self.base_url}/api/{version}/documents/import"
         response = requests.post(url,headers=self.headers, json=body)
         response.raise_for_status()
         return response
 
     @requests_error_handler
-    def list_folders(self, path:str='') -> dict:
+    def list_folders(self, path:str='', version:str='v1') -> dict:
         """
         List folders at the specified path.
         Args:
@@ -638,7 +351,7 @@ class OmniAPI:
         Returns:
             dict: A dictionary containing the list of folders.
         """
-        url = f"{self.base_url}/api/unstable/folders"
+        url = f"{self.base_url}/api/{version}/folders"
         response = requests.get(url, 
                                 headers=self.headers, 
                                 params={
@@ -649,7 +362,7 @@ class OmniAPI:
         return response.json()
 
     @requests_error_handler
-    def list_documents(self, folderId:str='') -> dict:
+    def list_documents(self, folderId:str='', version:str='v1') -> dict:
         """
         List documents in the specified folder.
         Args:
@@ -657,7 +370,7 @@ class OmniAPI:
         Returns:
             dict: A dictionary containing the list of documents.
         """
-        url = f"{self.base_url}/api/unstable/documents"
+        url = f"{self.base_url}/api/{version}/documents"
         response = requests.get(url, 
                                 headers=self.headers, 
                                 params={
@@ -668,7 +381,7 @@ class OmniAPI:
         return response.json() 
     
     @requests_error_handler
-    def list_groups(self, count:int=100,startIndex:int=1) -> dict:
+    def list_groups(self, count:int=100,startIndex:int=1, version:str='v2') -> dict:
         """
         List folders at the specified path.
         Args:
@@ -677,7 +390,7 @@ class OmniAPI:
         Returns:
             dict: A dictionary containing the list of folders.
         """
-        url = f"{self.base_url}/api/scim/v2/groups"
+        url = f"{self.base_url}/api/scim/{version}/groups"
         response = requests.get(url, 
                                 headers=self.headers, 
                                 params={
@@ -751,7 +464,7 @@ class OmniAPI:
         return group['id'] if group else None
     
     @requests_error_handler
-    def get_group(self, group_id:str) -> dict:
+    def get_group(self, group_id:str, version:str='v2') -> dict:
         """
         Get a group by its ID.
         Args:
@@ -759,13 +472,13 @@ class OmniAPI:
         Returns:
             dict: The group information.
         """
-        url = f"{self.base_url}/api/scim/v2/groups/{group_id}"
+        url = f"{self.base_url}/api/scim/{version}/groups/{group_id}"
         response = requests.get(url, headers=self.headers)
         response.raise_for_status()
         return response.json()
     
     @requests_error_handler
-    def update_group(self, group_id:str, body:dict) -> requests.Response:
+    def update_group(self, group_id:str, body:dict, version:str='v2') -> requests.Response:
         """
         Update a group.
         Args:
@@ -774,7 +487,7 @@ class OmniAPI:
         Returns:
             requests.Response: The response object from the update operation.
         """
-        url = f"{self.base_url}/api/scim/v2/groups/{group_id}"
+        url = f"{self.base_url}/api/scim/{version}/groups/{group_id}"
         response = requests.put(url, headers=self.headers, json=body)
         response.raise_for_status()
         return response
@@ -817,17 +530,76 @@ class OmniAPI:
         return self.update_group(group_id, group)
     
     @requests_error_handler
-    def get_model_yaml(self, model_id:str, filename:str=None) -> dict:
+    def create_model(self, connection_id: str, modelName:str, modelKind:str='SHARED', baseModelId:str=None, version:str='v1') -> dict:
         """
-        Get the YAML representation of a model.
+        Create a new model.
         Args:
-            model_id (str): The ID of the model to get.
-            filename (str, optional): The name of specific yaml file to return. Defaults to None.
+            connection_id (str): The connection ID.
+            body (dict): The model creation body.
         Returns:
-            dict: The YAML representation of the model.
+            dict: The created model information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
         """
-        url = f"{self.base_url}/api/unstable/models/{model_id}/yaml"
-        response = requests.get(url, headers=self.headers, params={'filename': filename})
+        url = f"{self.base_url}/api/{version}/models"
+        body = {}
+        body["connectionId"] = connection_id
+        body["modelKind"] = modelKind
+        body["modelName"] = modelName
+        if baseModelId:
+            body["baseModelId"] = baseModelId
+        response = requests.post(url, headers=self.headers, json=body)
         response.raise_for_status()
         return response.json()
     
+    @requests_error_handler
+    def list_models(self, connectionId:str='', baseModelId:str='', modelKind:str='', name:str='', version='v1') -> List[dict]:
+        """
+        List models based on connection ID, base model ID, and model kind.
+        Args:
+            connectionId (str, optional): The connection ID to filter models. Defaults to an empty string.
+            baseModelId (str, optional): The base model ID to filter models. Defaults to an empty string.
+            modelKind (str, optional): The kind of model to filter models. Values can be: SCHEMA, SHARED, SHARED_EXTENSION, WORKBOOK, BRANCH, QUERY, TOPIC, FIELD_PICKER_TOPIC
+            version (str, optional): The API version to use. Defaults to 'v1'.
+        Returns:
+            List[dict]: A list of dictionaries containing model information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = f"{self.base_url}/api/{version}/models"
+        response = requests.get(url, headers=self.headers, params={
+            'name': name if name else None,
+            'connectionId': connectionId if connectionId else None,
+            'baseModelId': baseModelId if baseModelId else None,
+            'modelKind': modelKind if modelKind else None,
+        })
+        response.raise_for_status()
+        return response.json()
+
+    @requests_error_handler
+    def yamlw(self, model_id:str, body:dict, version='unstable') -> dict:
+        """
+        Convert a dictionary to YAML format.
+        Args:
+            body (dict): The input dictionary to convert to YAML.
+        Returns:
+            dict: A dictionary containing the YAML representation of the input.
+        """
+        url = f"{self.base_url}/api/{version}/models/{model_id}/yaml"
+        response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
+        return response.json()
+
+    @requests_error_handler
+    def yamlr(self, model_id:str, body:dict, version='unstable') -> dict:
+        """
+        Convert a dictionary to YAML format.
+        Args:
+            body (dict): The k/v arguments supplied to the api
+        Returns:
+            dict: A dictionary containing the YAML representation of the input.
+        """
+        url = f"{self.base_url}/api/{version}/models/{model_id}/yaml"
+        response = requests.get(url, headers=self.headers, params=body)
+        response.raise_for_status()
+        return response.json()
