@@ -6,7 +6,7 @@ from examples.topic import Topic
 class TestTopic(unittest.TestCase):
     file_path = "examples/tests/data/order_items.topic.json"
 
-    # --- read straight into a dict --- 
+    # --- read straight into a dict ---
     with open(file_path, "r", encoding="utf-8") as f:
         json: dict = json.load(f)
 

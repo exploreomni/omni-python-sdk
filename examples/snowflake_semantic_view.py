@@ -1,7 +1,7 @@
 import sys
 from examples.topic import Topic
 from omni_python_sdk import OmniAPI
- 
+
 # Example of using the OmniAPI to get a topic definition and convert to a Snowflake semantic view
 # This example assumes you have a valid API key and base URL for the OmniAPI defined in your .env file
 
@@ -183,7 +183,7 @@ def sematic_view_from_topic(topic):
         # skip views without primary keys
         if not view.primary_key[0].field_name:
             continue
-        semantic_view.add_table(view.name, table_name=view.fully_scoped_table_name, primary_key=', '.join([k.field_name for k in view.primary_key]), synonyms=view.aliases, comment=view.description)
+        semantic_view.add_table(view.name, table_name=view.fully_scoped_table_name(), primary_key=', '.join([k.field_name for k in view.primary_key]), synonyms=view.aliases, comment=view.description)
         for dimension in view.dimensions:
             # skip parameterized dates
             if dimension.date_type:
