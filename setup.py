@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name='omni_python_sdk',
-	version='0.1.10',
+	version='0.1.11',
 	description='A Python SDK for Omni API',
 	long_description=open('README.md').read(),
 	long_description_content_type='text/markdown',
