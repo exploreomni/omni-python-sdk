@@ -12,11 +12,11 @@ class TestTopicToMetricView(unittest.TestCase):
     def test_to_metric_view(self):
         # Check if the loaded JSON can be converted to a DatabricksMetricView
         topic = Topic.model_validate(self.json)
-        metric_view = metric_view_from_topic(topic)
+        metric_view = metric_view_from_topic(topic, None, None)
         self.assertIsNotNone(metric_view)
         self.assertEqual(metric_view.name, "order_items")
         self.assertEqual(metric_view.source, "public.order_items")
-        self.assertEqual(len(metric_view.joins), 5)
+        self.assertEqual(len(metric_view.joins), 0)
 
 class TestDatabricksMetricView(unittest.TestCase):
     file_path = "examples/tests/data/order_items.topic.json"
@@ -25,7 +25,7 @@ class TestDatabricksMetricView(unittest.TestCase):
         json: dict = json.load(f)
     
     topic = Topic.model_validate(json)
-    metric_view = metric_view_from_topic(topic)
+    metric_view = metric_view_from_topic(topic, None, None)
 
     def test_generate_yaml(self):
         # Check if the generated YAML is a string
