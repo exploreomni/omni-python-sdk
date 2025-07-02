@@ -1,4 +1,4 @@
-CREATE SEMANTIC VIEW OMNI__order_items
+CREATE OR REPLACE SEMANTIC VIEW OMNI__order_items
 
 TABLES (
   distribution_centers AS public.distribution_centers

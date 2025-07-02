@@ -603,3 +603,177 @@ class OmniAPI:
         response = requests.get(url, headers=self.headers, params=body)
         response.raise_for_status()
         return response.json()
+    
+    def _base_model_url(self, version:str='v1') -> str:
+        """
+        Get the base URL for model operations.
+        Returns:
+            str: The base URL for model operations.
+        """
+        return f"{self.base_url}/api/{version}/model"
+
+    def _model_url(self, model_id: str, version:str='v1') -> str:
+        """
+        Get the URL for a specific model.
+        Args:
+            model_id (str): The ID of the model.
+        Returns:
+            str: The URL for the specified model.
+        """
+        return f"{self._base_model_url(version)}/{model_id}"
+
+    def _base_topic_url(self, model_id: str, version:str='v1') -> str:
+        """
+        Get the base URL for topic operations.
+        Args:
+            model_id (str): The ID of the model.
+        Returns:
+            str: The base URL for topic operations.
+        """
+        return f"{self._model_url(model_id, version)}/topic"
+
+    def _topic_url(self, model_id: str, topic_name: str, version:str='v1') -> str:
+        """
+        Get the URL for a specific topic.
+        Args:
+            model_id (str): The ID of the model.
+            topic_name (str): The name of the topic.
+        Returns:
+            str: The URL for the specified topic.
+        """
+        return f"{self._base_topic_url(model_id, version)}/{topic_name}"
+
+    def _base_view_url(self, model_id: str, version:str='v1') -> str:
+        """
+        Get the base URL for view operations.
+        Args:
+            model_id (str): The ID of the model.
+        Returns:
+            str: The base URL for view operations.
+        """
+        return f"{self._base_model_url(version)}/{model_id}/view"
+
+    def _view_url(self, model_id: str, view_name: str, version:str='v1') -> str:
+        """
+        Get the URL for a specific view.
+        Args:
+            model_id (str): The ID of the model.
+            view_name (str): The name of the view.
+        Returns:
+            str: The URL for the specified view.
+        """
+        return f"{self._base_model_url(model_id, version)}/{view_name}"
+
+    def _base_field_url(self, model_id: str, version:str='v1') -> str:
+        """
+        Get the base URL for field operations.
+        Args:
+            model_id (str): The ID of the model.
+        Returns:
+            str: The base URL for field operations.
+        """
+        return f"{self._base_view_url(model_id, version)}/field"
+
+    def _field_url(self, model_id: str, view_name: str, field_name: str, version:str='v1') -> str:
+        """
+        Get the URL for a specific field.
+        Args:
+            model_id (str): The ID of the model.
+            view_name (str): The name of the view.
+            field_name (str): The name of the field.
+        Returns:
+            str: The URL for the specified field.
+        """
+        return f"{self._view_url(model_id, view_name, version)}/field/{field_name}"
+    
+    @requests_error_handler
+    def create_model(self, connection_id: str, body: dict, version:str='v1') -> dict:
+        """
+        Create a new model.
+        Args:
+            connection_id (str): The connection ID.
+            body (dict): The model creation body.
+        Returns:
+            dict: The created model information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._base_model_url(version)
+        body["connectionId"] = connection_id
+        response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
+        return response.json()
+
+    @requests_error_handler
+    def create_topic(self, model_id: str, base_view_name: str, body: dict, version:str='v1') -> dict:
+        """
+        Create a new topic.
+        Args:
+            model_id (str): The ID of the model.
+            base_view_name (str): The name of the base view.
+            body (dict): The topic creation body.
+        Returns:
+            dict: The created topic information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._base_topic_url(model_id, version)
+        body["baseViewName"] = base_view_name
+        response = requests.post(url, headers=self.headers, json=body)
+        response.raise_for_status()
+        return response.json()
+
+    @requests_error_handler
+    def update_topic(self, model_id: str, topic_name: str, body: dict, version:str='v1') -> dict:
+        """
+        Update an existing topic.
+        Args:
+            model_id (str): The ID of the model.
+            topic_name (str): The name of the topic to update.
+            body (dict): The topic update body.
+        Returns:
+            dict: The updated topic information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._topic_url(model_id, topic_name, version)
+        response = requests.patch(url, headers=self.headers, json=body)
+        response.raise_for_status()
+        return response.json()
+
+    @requests_error_handler
+    def delete_topic(self, model_id: str, topic_name: str, version:str='v1') -> dict:
+        """
+        Delete a topic.
+        Args:
+            model_id (str): The ID of the model.
+            topic_name (str): The name of the topic to delete.
+        Returns:
+            dict: The response from the delete operation.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._topic_url(model_id, topic_name, version)
+        response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+    
+    @requests_error_handler
+    def get_topic(self, model_id: str, topic_name: str, version:str='unstable') -> dict:
+        """
+        Get a topic by its name.
+        Args:
+            model_id (str): The ID of the model.
+            topic_name (str): The name of the topic to get.
+        Returns:
+            dict: The topic information.
+        Raises:
+            requests.exceptions.RequestException: If the API request fails.
+        """
+        url = self._topic_url(model_id, topic_name, version)
+        response = requests.get(url, headers=self.headers)
+
+        payload = response.json()
+        if not payload['success']:
+            response.raise_for_status()
+        return payload['topic']
