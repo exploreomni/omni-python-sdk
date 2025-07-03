@@ -1,0 +1,38 @@
+dimensions:
+- expr: created_at
+  name: order_items__created_at
+- expr: delivered_at
+  name: order_items__delivered_at
+- expr: id
+  name: order_items__id
+- expr: inventory_item_id
+  name: order_items__inventory_item_id
+- expr: order_items__sale_price - products__cost
+  name: order_items__margin
+- expr: order_id
+  name: order_items__order_id
+- expr: returned_at
+  name: order_items__returned_at
+- expr: sale_price
+  name: order_items__sale_price
+- expr: shipped_at
+  name: order_items__shipped_at
+- expr: status
+  name: order_items__status
+- expr: user_id
+  name: order_items__user_id
+measures:
+- expr: Measure(order_items__sale_price_sum) / Measure(order_items__order_id_count_distinct)
+  name: order_items__calculation
+- expr: MIN(order_items__created_at)
+  name: order_items__created_at_min
+- expr: SUM(order_items__margin)
+  name: order_items__margin_sum
+- expr: COUNT(*)
+  name: order_items__count
+- expr: COUNT(DISTINCT order_items__order_id)
+  name: order_items__order_id_count_distinct
+- expr: SUM(order_items__sale_price)
+  name: order_items__sale_price_sum
+source: public.order_items
+version: '0.1'

@@ -1,25 +1,53 @@
-# omni-python-sdk
+# Omni Python SDK
 
-Python SDK for interacting with the Omni API
+[![CI](https://github.com/exploreomni/omni-python-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/exploreomni/omni-python-sdk/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/omni-python-sdk.svg)](https://badge.fury.io/py/omni-python-sdk)
+[![Python Support](https://img.shields.io/pypi/pyversions/omni-python-sdk.svg)](https://pypi.org/project/omni-python-sdk/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A comprehensive Python SDK for interacting with the Omni API. This library provides a simple and intuitive interface for querying data, managing users and groups, handling documents, and working with Omni's analytics platform.
+
+## Features
+
+- 🔍 **Query Execution**: Run queries and retrieve data as PyArrow tables or Pandas DataFrames
+- 👥 **User Management**: Create, update, and manage users via SCIM API
+- 📁 **Document Operations**: Import and export Omni documents
+- 🏗️ **Model Management**: Create and manage data models and topics  
+- 🔗 **Embed URLs**: Generate secure embed URLs for dashboards
+- 🛡️ **Type Safety**: Full type hints for better development experience
+- ⚡ **Async Support**: Built with performance in mind
 
 ## Installation
 
+Install from PyPI:
+
 ```bash
-pip install -r requirements.txt
+pip install omni-python-sdk
 ```
 
-## Usage
+For development with all optional dependencies:
+
+```bash
+pip install omni-python-sdk[dev]
+```
+
+## Quick Start
+
+### Basic Usage
+
 ```python
 from omni_python_sdk import OmniAPI
 
-# Set your API key and base URL
-api_key = "your_api_key"
-base_url = "https://your_domain.omniapp.co"
-#these can optionally be set in an .env file with the following keys:
-# OMNI_API_KEY=<<your api key>>
-# OMNI_BASE_URL=<<your base url>>
+# Initialize with credentials
+api = OmniAPI(
+    api_key="your_api_key",
+    base_url="https://your_domain.omniapp.co"
+)
 
-# Define your query
+# Or use environment variables (OMNI_API_KEY, OMNI_BASE_URL)
+api = OmniAPI()
+
+# Run a query
 query = {
     "query": {
         "sorts": [
@@ -38,29 +66,166 @@ query = {
     }
 }
 
-# Initialize the API with your credentials
-api = OmniAPI(api_key, base_url)
-# if you've optionally set your keys in a .env file no arguments are required:
-# api = OmniAPI()
-# if your environment variables are stored in an alternative location
-# api = OmniAPI(env_file='<<path_to_custom_env>>')
+# Execute query and get results
+table, fields = api.run_query_blocking(query)
 
-# Run the query and get a table
-table = api.run_query_blocking(query)
-
-# Convert the table to a Pandas DataFrame
+# Convert to Pandas DataFrame
 df = table.to_pandas()
-
-# Display the first few rows of the DataFrame
 print(df.head())
 ```
 
-To run the example, you need to replace `your_api_key`, `your_domain`, and `your_model_id` with your own values.
+### Environment Configuration
 
-To get a query object, you can use the Inspector on a Omni Workbook. The query object is a JSON object that represents the query you want to run. You can find the Inspector in the View menu on a Workbook. Look for the "Query Structure" section.
+Create a `.env` file in your project root:
 
-For a simple command line interface, you can run the following command:
+```env
+OMNI_API_KEY=your_api_key_here
+OMNI_BASE_URL=https://your_domain.omniapp.co
+```
+
+### User Management
+
+```python
+# Find user by email
+user = api.return_user_by_email("user@example.com")
+
+# Create or update user
+api.upsert_user(
+    email="newuser@example.com",
+    displayName="New User",
+    attributes={"department": "Engineering"}
+)
+
+# Add user to group
+api.add_user_to_group("Developers", user_id)
+```
+
+### Document Operations
+
+```python
+# Export document
+document_data = api.document_export("document_id")
+
+# Import document
+api.document_import(document_data)
+```
+
+## Command Line Usage
+
+Run queries directly from the command line:
 
 ```bash
-python3 examples/query.py OMNI_API_KEY https://OMNI_URL '{"query": {"sorts": [{"column_name": "omni_dbt__order_items.created_at[date]", "sort_descending": false}], "table": "omni_dbt__order_items", "fields": ["omni_dbt__order_items.created_at[date]", "omni_dbt__order_items.total_sale_price"], "modelId": "OMNI_MODEL_ID", "join_paths_from_topic_name": "order_items"}}
+python -m examples.query \
+  YOUR_API_KEY \
+  https://your-domain.omniapp.co \
+  '{"query": {"table": "your_table", "fields": ["field1", "field2"], "modelId": "your_model_id"}}'
 ```
+
+## API Reference
+
+### Core Classes
+
+- **`OmniAPI`**: Main client class for interacting with Omni API
+- **`@requests_error_handler`**: Decorator for handling API errors gracefully
+- **`@memoized`**: Decorator for caching expensive operations
+
+### Key Methods
+
+| Method | Description |
+|--------|-------------|
+| `run_query_blocking()` | Execute queries synchronously |
+| `create_user()`, `update_user()` | User management operations |
+| `document_export()`, `document_import()` | Document operations |
+| `create_topic()`, `get_topic()` | Topic management |
+| `generate_embed_url()` | Create secure embed URLs |
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/exploreomni/omni-python-sdk.git
+cd omni-python-sdk
+
+# Set up development environment
+make dev-setup
+```
+
+### Code Quality
+
+This project uses several tools to maintain code quality:
+
+- **Black**: Code formatting
+- **isort**: Import sorting  
+- **flake8**: Linting
+- **mypy**: Type checking
+- **pytest**: Testing
+
+```bash
+# Run all quality checks
+make quality
+
+# Format code
+make format
+
+# Run tests with coverage
+make test-cov
+```
+
+### Testing
+
+```bash
+# Run tests
+make test
+
+# Run tests with coverage report
+make test-cov
+
+# Run specific test file
+pytest tests/test_api.py -v
+```
+
+## Examples
+
+Explore the [`examples/`](examples/) directory for comprehensive usage examples:
+
+- **Basic Queries**: [`examples/query.py`](examples/query.py)
+- **User Management**: [`examples/user_management/`](examples/user_management/)
+- **Data Migration**: [`examples/content_migration.py`](examples/content_migration.py)
+- **Databricks Integration**: [`examples/databricks_metric_view.py`](examples/databricks_metric_view.py)
+- **Snowflake Integration**: [`examples/snowflake_semantic_view.py`](examples/snowflake_semantic_view.py)
+
+## Requirements
+
+- Python 3.9+
+- requests
+- pyarrow  
+- python-dotenv
+- pandas (for DataFrame conversion)
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines and submit pull requests to our GitHub repository.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes and add tests
+4. Run quality checks (`make quality`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [`LICENSE`](LICENSE) file for details.
+
+## Support
+
+- 📖 **Documentation**: [Omni API Docs](https://docs.omni.co)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/exploreomni/omni-python-sdk/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/exploreomni/omni-python-sdk/discussions)
+
+## Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for a detailed history of changes to this project.
