@@ -1,14 +1,14 @@
 from typing import Literal
 
-ScimUserPatchRequestOperationsItemOp = Literal["Add", "add", "Remove", "remove", "Replace", "replace"]
+ScimUserPatchRequestOperationsItemOp = Literal["Add", "add", "remove", "Remove", "replace", "Replace"]
 
 SCIM_USER_PATCH_REQUEST_OPERATIONS_ITEM_OP_VALUES: set[ScimUserPatchRequestOperationsItemOp] = {
     "Add",
     "add",
-    "Remove",
     "remove",
-    "Replace",
+    "Remove",
     "replace",
+    "Replace",
 }
 
 

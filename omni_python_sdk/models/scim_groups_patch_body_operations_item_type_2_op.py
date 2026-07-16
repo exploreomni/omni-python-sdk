@@ -1,10 +1,10 @@
 from typing import Literal
 
-ScimGroupsPatchBodyOperationsItemType2Op = Literal["add", "Add"]
+ScimGroupsPatchBodyOperationsItemType2Op = Literal["Add", "add"]
 
 SCIM_GROUPS_PATCH_BODY_OPERATIONS_ITEM_TYPE_2_OP_VALUES: set[ScimGroupsPatchBodyOperationsItemType2Op] = {
-    "add",
     "Add",
+    "add",
 }
 
 

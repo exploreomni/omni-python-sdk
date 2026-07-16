@@ -11,6 +11,10 @@
 
 set -euo pipefail
 
+# Enum value ordering in generated code depends on Python set iteration
+# order; pin the hash seed so regeneration is deterministic.
+export PYTHONHASHSEED=0
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC="$REPO_ROOT/spec/openapi.json"
 PROCESSED="$REPO_ROOT/spec/openapi.processed.json"
