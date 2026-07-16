@@ -1,66 +1,120 @@
 # omni-python-sdk
 
-Python SDK for interacting with the Omni API
+Python SDK for the [Omni Analytics API](https://docs.omni.co/docs/API/), generated from the official OpenAPI spec. Covers the full public API surface (195 endpoints across queries, documents, models, connections, SCIM user/group management, schedules, AI, and more), with typed request/response models and both sync and async support.
 
 ## Installation
 
 ```bash
-pip install -r requirements.txt
+pip install omni-python-sdk
 ```
 
-## Usage
+Requires Python 3.10+.
+
+## Authentication
+
+Create an API key in Omni under **Settings → API Keys**, then either export it:
+
+```bash
+export OMNI_API_KEY="your-api-key"
+export OMNI_BASE_URL="https://myorg.omniapp.co"
+```
+
+(or put the same two lines in a `.env` file) and build a client:
+
 ```python
-from omni_python_sdk import OmniAPI
+from omni_python_sdk.helpers import client_from_env
 
-# Set your API key and base URL
-api_key = "your_api_key"
-base_url = "https://your_domain.omniapp.co"
-#these can optionally be set in an .env file with the following keys:
-# OMNI_API_KEY=<<your api key>>
-# OMNI_BASE_URL=<<your base url>>
+client = client_from_env()
+```
 
-# Define your query
+Or construct one explicitly:
+
+```python
+from omni_python_sdk import AuthenticatedClient
+
+client = AuthenticatedClient(base_url="https://myorg.omniapp.co", token="your-api-key")
+```
+
+## Running queries
+
+The query endpoints return Apache Arrow data. The `helpers` module handles polling and decoding for you:
+
+```python
+from omni_python_sdk.helpers import client_from_env, run_query_blocking
+
+client = client_from_env()
+
 query = {
     "query": {
-        "sorts": [
-            {
-                "column_name": "order_items.created_at[date]",
-                "sort_descending": False
-            }
-        ],
+        "limit": 100,
+        "sorts": [{"column_name": "order_items.created_at[date]"}],
         "table": "order_items",
-        "fields": [
-            "order_items.created_at[date]",
-            "order_items.sale_price_sum"
-        ],
-        "modelId": "your_model_id",
-        "join_paths_from_topic_name": "order_items"
+        "fields": ["order_items.created_at[date]", "order_items.sale_price_sum"],
+        "modelId": "your-model-id",
     }
 }
 
-# Initialize the API with your credentials
-api = OmniAPI(api_key, base_url)
-# if you've optionally set your keys in a .env file no arguments are required:
-# api = OmniAPI()
-# if your environment variables are stored in an alternative location
-# api = OmniAPI(env_file='<<path_to_custom_env>>')
-
-# Run the query and get a table
-table = api.run_query_blocking(query)
-
-# Convert the table to a Pandas DataFrame
+table, fields = run_query_blocking(client, query)  # table is a pyarrow.Table
 df = table.to_pandas()
-
-# Display the first few rows of the DataFrame
-print(df.head())
 ```
 
-To run the example, you need to replace `your_api_key`, `your_domain`, and `your_model_id` with your own values.
+Tip: copy a ready-made query body from any workbook via **View → Query Structure**.
 
-To get a query object, you can use the Inspector on a Omni Workbook. The query object is a JSON object that represents the query you want to run. You can find the Inspector in the View menu on a Workbook. Look for the "Query Structure" section.
+## Calling any endpoint
 
-For a simple command line interface, you can run the following command:
+Every API operation is a module under `omni_python_sdk.api.<tag>`, with four variants: `sync`, `sync_detailed`, `asyncio`, and `asyncio_detailed`.
+
+```python
+from omni_python_sdk.api.whoami import whoami
+from omni_python_sdk.api.scim import scim_users_list
+from omni_python_sdk.api.documents import documents_create
+
+me = whoami.sync(client=client)
+
+users = scim_users_list.sync(client=client, count="50")
+
+response = documents_create.sync_detailed(client=client, body=...)
+print(response.status_code, response.parsed)
+```
+
+Request/response models live in `omni_python_sdk.models` and convert to/from plain dicts with `.to_dict()` / `.from_dict()`.
+
+Async is the same modules:
+
+```python
+result = await whoami.asyncio(client=client)
+```
+
+See [`examples/`](examples/) for end-to-end scripts (queries, user management, document migration, embed sessions, semantic-view generation).
+
+## Migrating from 0.x
+
+Version 1.0 is a full rewrite: the hand-written `OmniAPI` class is gone, replaced by the generated client above. The most common patterns map as follows:
+
+| 0.x | 1.x |
+|---|---|
+| `OmniAPI()` | `client_from_env()` from `omni_python_sdk.helpers` |
+| `api.run_query_blocking(body)` | `run_query_blocking(client, body)` from `omni_python_sdk.helpers` |
+| `api.create_user(body)` etc. | `omni_python_sdk.api.scim.scim_users_create.sync(client=client, body=...)` etc. |
+| `api.document_export(id)` | `omni_python_sdk.api.unstable.unstable_documents_export.sync(client=client, identifier=id)` |
+
+## Regenerating the SDK
+
+The client is generated from the vendored spec in `spec/openapi.json` using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client):
 
 ```bash
-python3 examples/query.py OMNI_API_KEY https://OMNI_URL '{"query": {"sorts": [{"column_name": "omni_dbt__order_items.created_at[date]", "sort_descending": false}], "table": "omni_dbt__order_items", "fields": ["omni_dbt__order_items.created_at[date]", "omni_dbt__order_items.total_sale_price"], "modelId": "OMNI_MODEL_ID", "join_paths_from_topic_name": "order_items"}}
+pip install openapi-python-client
+
+scripts/generate.sh                                  # regenerate from the checked-in spec
+scripts/generate.sh --url https://myorg.omniapp.co   # sync the spec from a live instance first
+scripts/generate.sh --source ../omni/packages/bi-app/app/types/api/openapi/openapi.json
+```
+
+The pipeline preprocesses the spec (`scripts/preprocess_spec.py`), regenerates `omni_python_sdk/` (preserving the hand-written `helpers.py`), and CI fails if the checked-in generated code drifts from the checked-in spec.
+
+## Development
+
+```bash
+pip install -e '.[dev]'
+pytest
 ```

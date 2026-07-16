@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e '.[dev]'
+      - name: Run tests
+        run: pytest
+
+  generated-code-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install generator
+        run: pip install 'openapi-python-client>=0.29.0,<0.30.0'
+      - name: Regenerate from checked-in spec
+        run: scripts/generate.sh
+      - name: Fail on drift
+        run: |
+          git diff --exit-code -- omni_python_sdk spec || {
+            echo '::error::Generated code is out of sync with spec/openapi.json. Run scripts/generate.sh and commit the result.'
+            exit 1
+          }
