@@ -1,14 +1,23 @@
 import sys
 import json
-from omni_python_sdk import OmniAPI
+from uuid import UUID
+from omni_python_sdk import AuthenticatedClient
+from omni_python_sdk.api.models import models_update_field
+from omni_python_sdk.models import ModelsUpdateFieldBody
 
 # Example script to update a field in a model with a JSON object
-def main(api_key: str, base_url: str, model_id: str, view_name: str, field_name: str, json: dict):
-	# Initialize the OmniAPI client
-	client = OmniAPI(api_key, base_url)
-	
-	result = client.update_field(model_id, view_name, field_name, json)
-	
+def main(api_key: str, base_url: str, model_id: str, view_name: str, field_name: str, field_json: dict):
+	# Initialize the client
+	client = AuthenticatedClient(base_url=base_url, token=api_key)
+
+	result = models_update_field.sync(
+		UUID(model_id),
+		view_name,
+		field_name,
+		client=client,
+		body=ModelsUpdateFieldBody.from_dict(field_json),
+	)
+
 	print(result)
 
 if __name__ == "__main__":
@@ -21,6 +30,6 @@ if __name__ == "__main__":
 	model_id = sys.argv[3]
 	view_name = sys.argv[4]
 	field_name = sys.argv[5]
-	json = json.loads(sys.argv[6])
+	field_json = json.loads(sys.argv[6])
 
-	main(api_key, base_url, model_id, view_name, field_name, json)
+	main(api_key, base_url, model_id, view_name, field_name, field_json)

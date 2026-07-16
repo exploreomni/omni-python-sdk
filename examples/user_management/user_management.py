@@ -1,12 +1,13 @@
-from omni_python_sdk import OmniAPI
+from omni_python_sdk import AuthenticatedClient
+from scim_helpers import upsert_user, delete_user
 import csv, time
 
 api_key = '<<your api key>>'
 base_url = 'https://<<your omni host>>'
 
 
-# Initialize the API with your credentials
-api = OmniAPI(api_key, base_url)
+# Initialize the client with your credentials
+client = AuthenticatedClient(base_url=base_url, token=api_key)
 
 with open('users.csv', newline='') as csvfile:
     spamreader = csv.DictReader(csvfile)
@@ -16,10 +17,11 @@ with open('users.csv', newline='') as csvfile:
         displayName = row.pop('display_name')
         op = row.pop('op')
         if op == 'upsert':
-            r1 = api.upsert_user(
+            upsert_user(
+                client,
                 email=email,
-                displayName=displayName,
+                display_name=displayName,
                 attributes=row
             )
         elif op == 'delete':
-            api.delete_user(email)
+            delete_user(client, email)

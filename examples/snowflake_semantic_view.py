@@ -1,9 +1,11 @@
 import sys
+from uuid import UUID
 from examples.topic import Topic
-from omni_python_sdk import OmniAPI
+from omni_python_sdk.api.models import models_get_topic
+from omni_python_sdk.helpers import client_from_env
 
-# Example of using the OmniAPI to get a topic definition and convert to a Snowflake semantic view
-# This example assumes you have a valid API key and base URL for the OmniAPI defined in your .env file
+# Example of using the Omni API to get a topic definition and convert to a Snowflake semantic view
+# This example assumes you have OMNI_API_KEY and OMNI_BASE_URL defined in your .env file
 
 #  https://docs.snowflake.com/en/user-guide/views-semantic/sql#label-semantic-views-create
 
@@ -201,10 +203,10 @@ def sematic_view_from_topic(topic):
     return semantic_view
 
 def main(model_id: str, topic_name: str):
-    client = OmniAPI()
+    client = client_from_env()
 
-    response = client.get_topic(model_id=model_id, topic_name=topic_name)
-    topic = Topic.model_validate(response)
+    response = models_get_topic.sync(UUID(model_id), topic_name, client=client)
+    topic = Topic.model_validate(response.topic.to_dict())
     semantic_view = sematic_view_from_topic(topic)
     print(semantic_view.generate_sql())
 

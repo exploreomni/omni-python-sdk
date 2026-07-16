@@ -1,4 +1,4 @@
-from omni_python_sdk import OmniAPI
+from omni_python_sdk.helpers import client_from_env, run_query_blocking
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
@@ -41,24 +41,26 @@ def plot_and_forecast(df: pd.DataFrame):
     plt.show()
 
 if __name__ == "__main__":
-    api_key = "your_api_key"
     query = {
-        "sorts": [
-            {
-                "column_name": "order_items.created_at[date]",
-                "sort_descending": False
-            }
-        ],
-        "table": "order_items",
-        "fields": [
-            "order_items.created_at[date]",
-            "order_items.sale_price_sum"
-        ],
-        "modelId": "55d8bd00-67ab-4519-853c-282cafd7e085",
-        "join_paths_from_topic_name": "order_items"
+        "query": {
+            "sorts": [
+                {
+                    "column_name": "order_items.created_at[date]",
+                    "sort_descending": False
+                }
+            ],
+            "table": "order_items",
+            "fields": [
+                "order_items.created_at[date]",
+                "order_items.sale_price_sum"
+            ],
+            "modelId": "55d8bd00-67ab-4519-853c-282cafd7e085",
+            "join_paths_from_topic_name": "order_items"
+        }
     }
 
-    api = OmniAPI(api_key)
-    table = api.run_query_blocking(query)
+    # Reads OMNI_API_KEY and OMNI_BASE_URL from the environment or a .env file
+    client = client_from_env()
+    table, fields = run_query_blocking(client, query)
     df = table.to_pandas()
     plot_and_forecast(df)
