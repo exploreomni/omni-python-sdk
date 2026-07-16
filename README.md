@@ -118,13 +118,7 @@ Everything in `omni_python_sdk/` **except `helpers.py`** is generated — don't 
 
 **Reviewing a spec-sync PR:** review the `spec/openapi.json` diff and any hand-written changes; skip the generated diff. That's safe because CI's drift check proves the generated code is a pure function of the checked-in spec.
 
-**Versioning:** the SDK follows its own semver, independent of the API's `info.version`:
-
-- **Major** — breaking changes to the generated surface (removed/renamed endpoints, fields, or types) or to `helpers.py`
-- **Minor** — new endpoints, models, or optional fields (most spec syncs)
-- **Patch** — regeneration fixes, docs, dependency bumps
-
-Generator upgrades (the `openapi-python-client` pin in `pyproject.toml`) can rewrite every generated file with no API change — land those as their own clearly-labeled PR, never mixed with a spec sync.
+**Versioning:** the SDK follows its own semver, independent of the API's `info.version` — major for breaking surface changes, minor for new endpoints/fields (most spec syncs), patch for regeneration fixes. See [VERSIONING.md](VERSIONING.md) for how to classify a spec sync (including mechanical breaking-change detection with oasdiff), how to handle generator upgrades, and the release process. Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
