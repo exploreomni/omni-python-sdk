@@ -1,0 +1,3 @@
+literal_enums: true
+project_name_override: omni-python-sdk
+package_name_override: omni_python_sdk
