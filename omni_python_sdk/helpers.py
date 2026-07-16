@@ -68,6 +68,11 @@ def run_query_blocking(
 
     data_payload = next((line for line in lines if "result" in line), None)
     if data_payload is None:
+        failed = next((line for line in lines if line.get("status") == "FAILED"), None)
+        if failed is not None:
+            raise ValueError(
+                f"Query failed ({failed.get('error_type', 'unknown')}): {failed.get('error_message', 'no message')}"
+            )
         raise ValueError("No result found in the query response.")
 
     raw_arrow_data = base64.b64decode(data_payload["result"])

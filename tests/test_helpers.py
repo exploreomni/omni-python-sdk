@@ -75,6 +75,25 @@ def test_run_query_blocking_polls_wait_until_done():
     assert table.equals(TABLE)
 
 
+def test_run_query_blocking_failed_job_raises_with_message():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return _ndjson_response(
+            [
+                {"jobs_submitted": {}},
+                {
+                    "job_id": "job-1",
+                    "status": "FAILED",
+                    "error_type": "PLAN",
+                    "error_message": 'No such view "order_items"',
+                },
+                {"timed_out": "false", "remaining_job_ids": []},
+            ]
+        )
+
+    with pytest.raises(ValueError, match=r'Query failed \(PLAN\): No such view "order_items"'):
+        run_query_blocking(_client_with_transport(handler), {"query": {}})
+
+
 def test_run_query_blocking_no_result_raises():
     def handler(request: httpx.Request) -> httpx.Response:
         return _ndjson_response([{"timed_out": "false"}])
