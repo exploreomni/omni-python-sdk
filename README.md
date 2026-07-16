@@ -60,6 +60,13 @@ df = table.to_pandas()
 
 Tip: copy a ready-made query body from any workbook via **View → Query Structure**.
 
+> **Note:** always use these helpers for queries — don't call the generated
+> `omni_python_sdk.api.query.query_run` / `query_wait` modules directly. The
+> spec declares these responses as JSON, but the endpoints actually stream
+> NDJSON with base64-encoded Arrow IPC data, which the generated response
+> parsing can't handle. The helpers own that decoding (and job polling, and
+> surfacing query errors).
+
 ## Calling any endpoint
 
 Every API operation is a module under `omni_python_sdk.api.<tag>`, with four variants: `sync`, `sync_detailed`, `asyncio`, and `asyncio_detailed`.
