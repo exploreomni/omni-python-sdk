@@ -110,7 +110,21 @@ scripts/generate.sh --url https://myorg.omniapp.co   # sync the spec from a live
 scripts/generate.sh --source ../omni/packages/bi-app/app/types/api/openapi/openapi.json
 ```
 
-The pipeline preprocesses the spec (`scripts/preprocess_spec.py`), regenerates `omni_python_sdk/` (preserving the hand-written `helpers.py`), and CI fails if the checked-in generated code drifts from the checked-in spec.
+The pipeline preprocesses the spec (`scripts/preprocess_spec.py`), regenerates `omni_python_sdk/` (preserving the hand-written `helpers.py`), and CI fails if the checked-in generated code drifts from the checked-in spec. When the spec is synced (`--source`/`--url`), `spec/provenance.json` records where it came from — including the omni repo commit SHA — so every SDK version is traceable to an exact API state.
+
+## Generated code policy
+
+Everything in `omni_python_sdk/` **except `helpers.py`** is generated — don't edit it by hand; changes belong in the spec (upstream in the omni repo) or in the generation pipeline. Generated files are marked `linguist-generated` in `.gitattributes`, so GitHub collapses them in PR diffs.
+
+**Reviewing a spec-sync PR:** review the `spec/openapi.json` diff and any hand-written changes; skip the generated diff. That's safe because CI's drift check proves the generated code is a pure function of the checked-in spec.
+
+**Versioning:** the SDK follows its own semver, independent of the API's `info.version`:
+
+- **Major** — breaking changes to the generated surface (removed/renamed endpoints, fields, or types) or to `helpers.py`
+- **Minor** — new endpoints, models, or optional fields (most spec syncs)
+- **Patch** — regeneration fixes, docs, dependency bumps
+
+Generator upgrades (the `openapi-python-client` pin in `pyproject.toml`) can rewrite every generated file with no API change — land those as their own clearly-labeled PR, never mixed with a spec sync.
 
 ## Development
 

@@ -21,11 +21,33 @@ PROCESSED="$REPO_ROOT/spec/openapi.processed.json"
 CONFIG="$REPO_ROOT/generator/config.yaml"
 PKG="$REPO_ROOT/omni_python_sdk"
 
+# record_provenance <source-description>
+# Only written when the spec is synced, so plain regeneration (and the CI
+# drift check) stays deterministic.
+record_provenance() {
+  python - "$SPEC" "$1" <<'PYEOF'
+import datetime, hashlib, json, sys
+spec, source = sys.argv[1], sys.argv[2]
+digest = hashlib.sha256(open(spec, "rb").read()).hexdigest()
+provenance = {
+    "source": source,
+    "spec_sha256": digest,
+    "synced_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+path = spec.rsplit("/", 1)[0] + "/provenance.json"
+json.dump(provenance, open(path, "w"), indent=2)
+print(f"wrote {path}")
+PYEOF
+}
+
 if [[ "${1:-}" == "--source" ]]; then
   cp "$2" "$SPEC"
+  OMNI_SHA="$(git -C "$(dirname "$2")" rev-parse HEAD 2>/dev/null || echo unknown)"
+  record_provenance "omni repo @ $OMNI_SHA"
   echo "synced spec from $2"
 elif [[ "${1:-}" == "--url" ]]; then
   curl -fsSL "${2%/}/openapi.json" -o "$SPEC"
+  record_provenance "${2%/}/openapi.json"
   echo "synced spec from ${2%/}/openapi.json"
 fi
 

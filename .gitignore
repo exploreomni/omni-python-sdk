@@ -14,3 +14,4 @@ build/
 dist/
 omni_python_sdk.egg-info/
 .venv-test/
+spec/openapi.processed.json
