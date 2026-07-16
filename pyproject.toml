@@ -20,7 +20,8 @@ Documentation = "https://docs.omni.co/docs/API/"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "openapi-python-client>=0.29.0,<0.30.0",
+    # Codegen tool only; requires Python 3.11+ (the SDK itself supports 3.10)
+    "openapi-python-client>=0.29.0,<0.30.0; python_version >= '3.11'",
     "ruff",
     "pandas",
 ]

@@ -100,7 +100,7 @@ Version 1.0 is a full rewrite: the hand-written `OmniAPI` class is gone, replace
 
 ## Regenerating the SDK
 
-The client is generated from the vendored spec in `spec/openapi.json` using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client):
+The client is generated from the vendored spec in `spec/openapi.json` using [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) (the generator needs Python 3.11+, though the SDK itself runs on 3.10):
 
 ```bash
 pip install openapi-python-client
