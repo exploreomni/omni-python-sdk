@@ -1,3 +1,8 @@
-from .api import OmniAPI
+"""A client library for accessing Omni API"""
 
-__all__ = ['OmniAPI']
+from .client import AuthenticatedClient, Client
+
+__all__ = (
+    "AuthenticatedClient",
+    "Client",
+)

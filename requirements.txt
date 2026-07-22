@@ -1,7 +1,0 @@
-requests
-pyarrow
-ndjson
-pandas
-matplotlib
-statsmodels
-load-dotenv

@@ -1,16 +1,17 @@
 import sys
 import json
 import pandas as pd
-from omni_python_sdk import OmniAPI
+from omni_python_sdk import AuthenticatedClient
+from omni_python_sdk.helpers import run_query_blocking
 from typing import Any, Dict
 
 
 def main(api_key: str, base_url: str, json_query: Dict[str, Any]):
-	# Initialize the OmniAPI client
-	client = OmniAPI(api_key, base_url)
+	# Initialize the client
+	client = AuthenticatedClient(base_url=base_url, token=api_key)
 
 	# Execute the query
-	result, fields = client.run_query_blocking(json_query)
+	result, fields = run_query_blocking(client, json_query)
 
 	# Create a mapping from raw column names to their labels
 	column_mapping = {field_name: metadata.get('label', field_name) for field_name, metadata in fields.items()}

@@ -1,0 +1,6 @@
+# Collapse generated code in GitHub diffs and exclude it from language stats.
+# Reviewers should review spec/openapi.json changes and hand-written files;
+# CI's drift check guarantees the generated code matches the spec.
+omni_python_sdk/** linguist-generated=true
+omni_python_sdk/helpers.py linguist-generated=false
+spec/openapi.json linguist-generated=true

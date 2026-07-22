@@ -1,0 +1,40 @@
+[project]
+name = "omni-python-sdk"
+version = "1.0.0"
+description = "Python SDK for the Omni Analytics API, generated from the official OpenAPI spec"
+authors = [{ name = "Omni Analytics", email = "support@omni.co" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.23.1,<0.29.0",
+    "attrs>=22.2.0",
+    "pyarrow>=14.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/exploreomni/omni-python-sdk"
+Documentation = "https://docs.omni.co/docs/API/"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    # Codegen tool only; requires Python 3.11+ (the SDK itself supports 3.10)
+    "openapi-python-client>=0.29.0,<0.30.0; python_version >= '3.11'",
+    "ruff",
+    "pandas",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["omni_python_sdk"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
