@@ -24,7 +24,8 @@ class ModelsGitGetResponse:
     """
     Attributes:
         auth_method (ModelsGitGetResponseAuthMethod): Authentication method. "ssh" for deploy key, "https_token" for
-            deploy token/PAT. Example: ssh.
+            deploy token/PAT. "github_app" may appear for connections managed in Omni model settings; it cannot be created
+            or modified through this API. Example: ssh.
         base_branch (str): The target branch for Omni pull requests Example: main.
         branch_per_pull_request (bool): If true, all pull requests will create a branch in Omni, even those created
             outside of the tool

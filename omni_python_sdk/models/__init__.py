@@ -1,5 +1,6 @@
 """Contains all the data models used in inputs/outputs"""
 
+from .agentic_job_attachment import AgenticJobAttachment
 from .ai_agent_action import AiAgentAction
 from .ai_agent_action_kind import AiAgentActionKind
 from .ai_agent_actions_response import AiAgentActionsResponse
@@ -9,12 +10,20 @@ from .ai_conversation_detail_response import AiConversationDetailResponse
 from .ai_conversation_message import AiConversationMessage
 from .ai_conversation_message_role import AiConversationMessageRole
 from .ai_conversations_list_response import AiConversationsListResponse
+from .ai_credit_controls_entity_groups_list_response import AiCreditControlsEntityGroupsListResponse
+from .ai_credit_controls_entity_groups_list_response_records_item import (
+    AiCreditControlsEntityGroupsListResponseRecordsItem,
+)
 from .ai_credit_controls_response import AiCreditControlsResponse
 from .ai_credit_controls_update_body import AiCreditControlsUpdateBody
 from .ai_credit_controls_users_list_response import AiCreditControlsUsersListResponse
 from .ai_credit_controls_users_list_response_records_item import AiCreditControlsUsersListResponseRecordsItem
 from .ai_credit_shutoff_error import AiCreditShutoffError
 from .ai_credit_shutoff_error_code import AiCreditShutoffErrorCode
+from .ai_entity_group_credit_limit_entry import AiEntityGroupCreditLimitEntry
+from .ai_entity_group_credit_limits_response import AiEntityGroupCreditLimitsResponse
+from .ai_entity_group_credit_limits_response_entity_groups_item import AiEntityGroupCreditLimitsResponseEntityGroupsItem
+from .ai_entity_group_credit_limits_update_body import AiEntityGroupCreditLimitsUpdateBody
 from .ai_eval_prompt_sets_list_archived import AiEvalPromptSetsListArchived
 from .ai_eval_runs_list_archived import AiEvalRunsListArchived
 from .ai_generate_query_body import AiGenerateQueryBody
@@ -194,6 +203,7 @@ from .create_model_schema_base_model_kind_type_0 import CreateModelSchemaBaseMod
 from .create_model_schema_base_model_kind_type_1 import CreateModelSchemaBaseModelKindType1
 from .create_model_schema_base_model_kind_type_2 import CreateModelSchemaBaseModelKindType2
 from .create_model_schema_base_model_kind_type_3 import CreateModelSchemaBaseModelKindType3
+from .create_model_schema_base_model_kind_type_4 import CreateModelSchemaBaseModelKindType4
 from .dashboard_filters_response import DashboardFiltersResponse
 from .dashboards_download_body import DashboardsDownloadBody
 from .dashboards_download_body_format import DashboardsDownloadBodyFormat
@@ -222,6 +232,7 @@ from .dbt_exposure_owner import DbtExposureOwner
 from .dbt_exposure_type import DbtExposureType
 from .dbt_exposure_with_meta import DbtExposureWithMeta
 from .document import Document
+from .document_abilities import DocumentAbilities
 from .document_count import DocumentCount
 from .document_export_response import DocumentExportResponse
 from .document_export_response_document import DocumentExportResponseDocument
@@ -367,6 +378,8 @@ from .folders_update_permissions_body import FoldersUpdatePermissionsBody
 from .folders_update_permissions_body_role import FoldersUpdatePermissionsBodyRole
 from .folders_update_permissions_response import FoldersUpdatePermissionsResponse
 from .folders_update_response import FoldersUpdateResponse
+from .generate_suggestions_response import GenerateSuggestionsResponse
+from .generate_suggestions_response_status import GenerateSuggestionsResponseStatus
 from .grid_container import GridContainer
 from .ignore_suggestion_body import IgnoreSuggestionBody
 from .internal_folder_type_0 import InternalFolderType0
@@ -479,9 +492,16 @@ from .query_presentations_read_external import QueryPresentationsReadExternal
 from .query_run_body import QueryRunBody
 from .query_run_body_cache import QueryRunBodyCache
 from .query_run_body_result_type import QueryRunBodyResultType
-from .query_run_response import QueryRunResponse
+from .query_run_response_200_item import QueryRunResponse200Item
+from .query_stream_footer_line import QueryStreamFooterLine
+from .query_stream_footer_line_timed_out import QueryStreamFooterLineTimedOut
+from .query_stream_job_line import QueryStreamJobLine
+from .query_stream_job_line_column_name_mapping import QueryStreamJobLineColumnNameMapping
+from .query_stream_job_line_stream_stats import QueryStreamJobLineStreamStats
+from .query_stream_job_line_used_keys import QueryStreamJobLineUsedKeys
+from .query_stream_jobs_submitted_line import QueryStreamJobsSubmittedLine
+from .query_stream_jobs_submitted_line_jobs_submitted import QueryStreamJobsSubmittedLineJobsSubmitted
 from .query_timeout_response import QueryTimeoutResponse
-from .query_wait_response import QueryWaitResponse
 from .reference_container import ReferenceContainer
 from .role_assignment_result import RoleAssignmentResult
 from .role_origin_type_0 import RoleOriginType0
@@ -617,6 +637,14 @@ from .suggestion_evidence_item import SuggestionEvidenceItem
 from .suggestion_evidence_item_type import SuggestionEvidenceItemType
 from .suggestion_proposed_changes import SuggestionProposedChanges
 from .suggestion_proposed_changes_kind import SuggestionProposedChangesKind
+from .suggestion_run import SuggestionRun
+from .suggestion_run_error_type_0 import SuggestionRunErrorType0
+from .suggestion_run_latest_response import SuggestionRunLatestResponse
+from .suggestion_run_latest_response_run import SuggestionRunLatestResponseRun
+from .suggestion_run_status import SuggestionRunStatus
+from .suggestion_run_trigger_source import SuggestionRunTriggerSource
+from .suggestion_run_triggered_by_type_0 import SuggestionRunTriggeredByType0
+from .suggestions_cooldown_response import SuggestionsCooldownResponse
 from .upload import Upload
 from .upload_create_body import UploadCreateBody
 from .upload_create_response import UploadCreateResponse
@@ -664,6 +692,7 @@ from .whoami_response_roles_by_model import WhoamiResponseRolesByModel
 from .whoami_user import WhoamiUser
 
 __all__ = (
+    "AgenticJobAttachment",
     "AiAgentAction",
     "AiAgentActionKind",
     "AiAgentActionsResponse",
@@ -673,12 +702,18 @@ __all__ = (
     "AiConversationMessage",
     "AiConversationMessageRole",
     "AiConversationsListResponse",
+    "AiCreditControlsEntityGroupsListResponse",
+    "AiCreditControlsEntityGroupsListResponseRecordsItem",
     "AiCreditControlsResponse",
     "AiCreditControlsUpdateBody",
     "AiCreditControlsUsersListResponse",
     "AiCreditControlsUsersListResponseRecordsItem",
     "AiCreditShutoffError",
     "AiCreditShutoffErrorCode",
+    "AiEntityGroupCreditLimitEntry",
+    "AiEntityGroupCreditLimitsResponse",
+    "AiEntityGroupCreditLimitsResponseEntityGroupsItem",
+    "AiEntityGroupCreditLimitsUpdateBody",
     "AiEvalPromptSetsListArchived",
     "AiEvalRunsListArchived",
     "AiGenerateQueryBody",
@@ -822,6 +857,7 @@ __all__ = (
     "CreateModelSchemaBaseModelKindType1",
     "CreateModelSchemaBaseModelKindType2",
     "CreateModelSchemaBaseModelKindType3",
+    "CreateModelSchemaBaseModelKindType4",
     "DashboardFiltersResponse",
     "DashboardsDownloadBody",
     "DashboardsDownloadBodyFormat",
@@ -846,6 +882,7 @@ __all__ = (
     "DbtExposureType",
     "DbtExposureWithMeta",
     "Document",
+    "DocumentAbilities",
     "DocumentCount",
     "DocumentExportResponse",
     "DocumentExportResponseDocument",
@@ -989,6 +1026,8 @@ __all__ = (
     "FoldersUpdatePermissionsBodyRole",
     "FoldersUpdatePermissionsResponse",
     "FoldersUpdateResponse",
+    "GenerateSuggestionsResponse",
+    "GenerateSuggestionsResponseStatus",
     "GridContainer",
     "IgnoreSuggestionBody",
     "InternalFolderType0",
@@ -1099,9 +1138,16 @@ __all__ = (
     "QueryRunBody",
     "QueryRunBodyCache",
     "QueryRunBodyResultType",
-    "QueryRunResponse",
+    "QueryRunResponse200Item",
+    "QueryStreamFooterLine",
+    "QueryStreamFooterLineTimedOut",
+    "QueryStreamJobLine",
+    "QueryStreamJobLineColumnNameMapping",
+    "QueryStreamJobLineStreamStats",
+    "QueryStreamJobLineUsedKeys",
+    "QueryStreamJobsSubmittedLine",
+    "QueryStreamJobsSubmittedLineJobsSubmitted",
     "QueryTimeoutResponse",
-    "QueryWaitResponse",
     "ReferenceContainer",
     "RoleAssignmentResult",
     "RoleOriginType0",
@@ -1219,6 +1265,14 @@ __all__ = (
     "SuggestionEvidenceItemType",
     "SuggestionProposedChanges",
     "SuggestionProposedChangesKind",
+    "SuggestionRun",
+    "SuggestionRunErrorType0",
+    "SuggestionRunLatestResponse",
+    "SuggestionRunLatestResponseRun",
+    "SuggestionRunStatus",
+    "SuggestionRunTriggeredByType0",
+    "SuggestionRunTriggerSource",
+    "SuggestionsCooldownResponse",
     "Upload",
     "UploadCreateBody",
     "UploadCreateResponse",

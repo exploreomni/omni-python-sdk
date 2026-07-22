@@ -17,9 +17,9 @@ T = TypeVar("T", bound="EvalRunsCreateResponse")
 class EvalRunsCreateResponse:
     """
     Attributes:
-        job_count (int): Number of per-prompt agentic jobs created for this run (one per prompt that fanned out
-            successfully). Enqueue onto the work queue happens after creation and is best-effort, so this count reflects
-            jobs created, not necessarily those successfully enqueued. Example: 12.
+        job_count (int): Number of agentic jobs created for this run (one per prompt execution — prompts × repeat count
+            — that fanned out successfully). Enqueue onto the work queue happens after creation and is best-effort, so this
+            count reflects jobs created, not necessarily those successfully enqueued. Example: 12.
         run (EvalRunDetail): The newly created run with its initial results.
     """
 

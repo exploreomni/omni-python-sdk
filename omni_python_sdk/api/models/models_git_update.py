@@ -84,6 +84,11 @@ def sync_detailed(
 ) -> Response[Any | ModelsGitUpdateResponse]:
     """Update git configuration
 
+     Update git configuration for a model. Only provided fields are changed. For SSH auth, a bring-your-
+    own deploy key can be set via deployPrivateKey (with deployKeyPassphrase for encrypted keys),
+    enabling zero-downtime key rotation: authorize the matching public key with the git provider first,
+    then set the key here.
+
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
         body (ModelsGitUpdateBody | Unset):
@@ -116,6 +121,11 @@ def sync(
 ) -> Any | ModelsGitUpdateResponse | None:
     """Update git configuration
 
+     Update git configuration for a model. Only provided fields are changed. For SSH auth, a bring-your-
+    own deploy key can be set via deployPrivateKey (with deployKeyPassphrase for encrypted keys),
+    enabling zero-downtime key rotation: authorize the matching public key with the git provider first,
+    then set the key here.
+
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
         body (ModelsGitUpdateBody | Unset):
@@ -142,6 +152,11 @@ async def asyncio_detailed(
     body: ModelsGitUpdateBody | Unset = UNSET,
 ) -> Response[Any | ModelsGitUpdateResponse]:
     """Update git configuration
+
+     Update git configuration for a model. Only provided fields are changed. For SSH auth, a bring-your-
+    own deploy key can be set via deployPrivateKey (with deployKeyPassphrase for encrypted keys),
+    enabling zero-downtime key rotation: authorize the matching public key with the git provider first,
+    then set the key here.
 
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
@@ -172,6 +187,11 @@ async def asyncio(
     body: ModelsGitUpdateBody | Unset = UNSET,
 ) -> Any | ModelsGitUpdateResponse | None:
     """Update git configuration
+
+     Update git configuration for a model. Only provided fields are changed. For SSH auth, a bring-your-
+    own deploy key can be set via deployPrivateKey (with deployKeyPassphrase for encrypted keys),
+    enabling zero-downtime key rotation: authorize the matching public key with the git provider first,
+    then set the key here.
 
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.

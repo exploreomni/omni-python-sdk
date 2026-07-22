@@ -140,9 +140,9 @@ def sync_detailed(
 ]:
     """Start an eval run
 
-     Create and start a new run against an existing prompt set. The run enqueues one agentic job per
-    prompt and begins executing immediately. Returns the newly created run with its initial per-prompt
-    result rows.
+     Create and start a new run against an existing prompt set. The run enqueues
+    `run_config.repeat_count` agentic jobs per prompt (default 1) and begins executing immediately.
+    Returns the newly created run with its initial per-execution result rows.
 
     Args:
         body (EvalRunsCreateBody):
@@ -184,9 +184,9 @@ def sync(
 ):
     """Start an eval run
 
-     Create and start a new run against an existing prompt set. The run enqueues one agentic job per
-    prompt and begins executing immediately. Returns the newly created run with its initial per-prompt
-    result rows.
+     Create and start a new run against an existing prompt set. The run enqueues
+    `run_config.repeat_count` agentic jobs per prompt (default 1) and begins executing immediately.
+    Returns the newly created run with its initial per-execution result rows.
 
     Args:
         body (EvalRunsCreateBody):
@@ -222,9 +222,9 @@ async def asyncio_detailed(
 ]:
     """Start an eval run
 
-     Create and start a new run against an existing prompt set. The run enqueues one agentic job per
-    prompt and begins executing immediately. Returns the newly created run with its initial per-prompt
-    result rows.
+     Create and start a new run against an existing prompt set. The run enqueues
+    `run_config.repeat_count` agentic jobs per prompt (default 1) and begins executing immediately.
+    Returns the newly created run with its initial per-execution result rows.
 
     Args:
         body (EvalRunsCreateBody):
@@ -264,9 +264,9 @@ async def asyncio(
 ):
     """Start an eval run
 
-     Create and start a new run against an existing prompt set. The run enqueues one agentic job per
-    prompt and begins executing immediately. Returns the newly created run with its initial per-prompt
-    result rows.
+     Create and start a new run against an existing prompt set. The run enqueues
+    `run_config.repeat_count` agentic jobs per prompt (default 1) and begins executing immediately.
+    Returns the newly created run with its initial per-execution result rows.
 
     Args:
         body (EvalRunsCreateBody):

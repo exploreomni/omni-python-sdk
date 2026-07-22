@@ -5,7 +5,8 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.query_wait_response import QueryWaitResponse
+from ...models.query_stream_footer_line import QueryStreamFooterLine
+from ...models.query_stream_job_line import QueryStreamJobLine
 from ...types import UNSET, Response
 
 
@@ -31,9 +32,25 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | QueryWaitResponse | None:
+) -> Any | QueryStreamFooterLine | QueryStreamJobLine | None:
     if response.status_code == 200:
-        response_200 = QueryWaitResponse.from_dict(response.json())
+
+        def _parse_response_200(data: object) -> QueryStreamFooterLine | QueryStreamJobLine:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                componentsschemas_query_wait_stream_line_type_0 = QueryStreamJobLine.from_dict(data)
+
+                return componentsschemas_query_wait_stream_line_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            componentsschemas_query_wait_stream_line_type_1 = QueryStreamFooterLine.from_dict(data)
+
+            return componentsschemas_query_wait_stream_line_type_1
+
+        response_200 = _parse_response_200(response.text)
 
         return response_200
 
@@ -61,7 +78,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | QueryWaitResponse]:
+) -> Response[Any | QueryStreamFooterLine | QueryStreamJobLine]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -74,8 +91,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     job_ids: str,
-) -> Response[Any | QueryWaitResponse]:
+) -> Response[Any | QueryStreamFooterLine | QueryStreamJobLine]:
     """Wait for query jobs to complete
+
+     Waits for previously submitted query jobs and streams results as they complete. The response is a
+    stream of newline-delimited JSON (`Content-Type: text/ndjson`): one line per job (same shape as the
+    job lines from query/run, including the base64-encoded Arrow IPC `result`), then a footer. Unlike
+    query/run, there is no `jobs_submitted` header line. If the footer's `remaining_job_ids` is non-
+    empty, call this endpoint again with those IDs until it is empty.
 
     Args:
         job_ids (str): Comma-separated list of job IDs to wait for. Obtained from the query/run
@@ -86,7 +109,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | QueryWaitResponse]
+        Response[Any | QueryStreamFooterLine | QueryStreamJobLine]
     """
 
     kwargs = _get_kwargs(
@@ -104,8 +127,14 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     job_ids: str,
-) -> Any | QueryWaitResponse | None:
+) -> Any | QueryStreamFooterLine | QueryStreamJobLine | None:
     """Wait for query jobs to complete
+
+     Waits for previously submitted query jobs and streams results as they complete. The response is a
+    stream of newline-delimited JSON (`Content-Type: text/ndjson`): one line per job (same shape as the
+    job lines from query/run, including the base64-encoded Arrow IPC `result`), then a footer. Unlike
+    query/run, there is no `jobs_submitted` header line. If the footer's `remaining_job_ids` is non-
+    empty, call this endpoint again with those IDs until it is empty.
 
     Args:
         job_ids (str): Comma-separated list of job IDs to wait for. Obtained from the query/run
@@ -116,7 +145,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | QueryWaitResponse
+        Any | QueryStreamFooterLine | QueryStreamJobLine
     """
 
     return sync_detailed(
@@ -129,8 +158,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     job_ids: str,
-) -> Response[Any | QueryWaitResponse]:
+) -> Response[Any | QueryStreamFooterLine | QueryStreamJobLine]:
     """Wait for query jobs to complete
+
+     Waits for previously submitted query jobs and streams results as they complete. The response is a
+    stream of newline-delimited JSON (`Content-Type: text/ndjson`): one line per job (same shape as the
+    job lines from query/run, including the base64-encoded Arrow IPC `result`), then a footer. Unlike
+    query/run, there is no `jobs_submitted` header line. If the footer's `remaining_job_ids` is non-
+    empty, call this endpoint again with those IDs until it is empty.
 
     Args:
         job_ids (str): Comma-separated list of job IDs to wait for. Obtained from the query/run
@@ -141,7 +176,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | QueryWaitResponse]
+        Response[Any | QueryStreamFooterLine | QueryStreamJobLine]
     """
 
     kwargs = _get_kwargs(
@@ -157,8 +192,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     job_ids: str,
-) -> Any | QueryWaitResponse | None:
+) -> Any | QueryStreamFooterLine | QueryStreamJobLine | None:
     """Wait for query jobs to complete
+
+     Waits for previously submitted query jobs and streams results as they complete. The response is a
+    stream of newline-delimited JSON (`Content-Type: text/ndjson`): one line per job (same shape as the
+    job lines from query/run, including the base64-encoded Arrow IPC `result`), then a footer. Unlike
+    query/run, there is no `jobs_submitted` header line. If the footer's `remaining_job_ids` is non-
+    empty, call this endpoint again with those IDs until it is empty.
 
     Args:
         job_ids (str): Comma-separated list of job IDs to wait for. Obtained from the query/run
@@ -169,7 +210,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | QueryWaitResponse
+        Any | QueryStreamFooterLine | QueryStreamJobLine
     """
 
     return (

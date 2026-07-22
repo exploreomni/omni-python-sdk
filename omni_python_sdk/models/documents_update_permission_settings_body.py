@@ -19,8 +19,12 @@ T = TypeVar("T", bound="DocumentsUpdatePermissionSettingsBody")
 class DocumentsUpdatePermissionSettingsBody:
     """
     Attributes:
+        can_analyze (bool | Unset): Allow exploring from this document
         can_download (bool | Unset): Allow downloading
         can_drill (bool | Unset): Allow drill-down
+        can_duplicate (bool | Unset): Allow duplicating
+        can_request_access (bool | Unset): Allow requesting access
+        can_save_spreadsheets (bool | Unset): Allow creating spreadsheets
         can_schedule (bool | Unset): Allow scheduling
         can_upload (bool | Unset): Allow uploads
         can_use_dashboard_ai (bool | Unset): Allow using dashboard AI
@@ -32,8 +36,12 @@ class DocumentsUpdatePermissionSettingsBody:
         require_pull_request_to_publish (bool | Unset): Require pull request to publish changes
     """
 
+    can_analyze: bool | Unset = UNSET
     can_download: bool | Unset = UNSET
     can_drill: bool | Unset = UNSET
+    can_duplicate: bool | Unset = UNSET
+    can_request_access: bool | Unset = UNSET
+    can_save_spreadsheets: bool | Unset = UNSET
     can_schedule: bool | Unset = UNSET
     can_upload: bool | Unset = UNSET
     can_use_dashboard_ai: bool | Unset = UNSET
@@ -45,9 +53,17 @@ class DocumentsUpdatePermissionSettingsBody:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        can_analyze = self.can_analyze
+
         can_download = self.can_download
 
         can_drill = self.can_drill
+
+        can_duplicate = self.can_duplicate
+
+        can_request_access = self.can_request_access
+
+        can_save_spreadsheets = self.can_save_spreadsheets
 
         can_schedule = self.can_schedule
 
@@ -70,10 +86,18 @@ class DocumentsUpdatePermissionSettingsBody:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if can_analyze is not UNSET:
+            field_dict["canAnalyze"] = can_analyze
         if can_download is not UNSET:
             field_dict["canDownload"] = can_download
         if can_drill is not UNSET:
             field_dict["canDrill"] = can_drill
+        if can_duplicate is not UNSET:
+            field_dict["canDuplicate"] = can_duplicate
+        if can_request_access is not UNSET:
+            field_dict["canRequestAccess"] = can_request_access
+        if can_save_spreadsheets is not UNSET:
+            field_dict["canSaveSpreadsheets"] = can_save_spreadsheets
         if can_schedule is not UNSET:
             field_dict["canSchedule"] = can_schedule
         if can_upload is not UNSET:
@@ -96,9 +120,17 @@ class DocumentsUpdatePermissionSettingsBody:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        can_analyze = d.pop("canAnalyze", UNSET)
+
         can_download = d.pop("canDownload", UNSET)
 
         can_drill = d.pop("canDrill", UNSET)
+
+        can_duplicate = d.pop("canDuplicate", UNSET)
+
+        can_request_access = d.pop("canRequestAccess", UNSET)
+
+        can_save_spreadsheets = d.pop("canSaveSpreadsheets", UNSET)
 
         can_schedule = d.pop("canSchedule", UNSET)
 
@@ -122,8 +154,12 @@ class DocumentsUpdatePermissionSettingsBody:
         require_pull_request_to_publish = d.pop("requirePullRequestToPublish", UNSET)
 
         documents_update_permission_settings_body = cls(
+            can_analyze=can_analyze,
             can_download=can_download,
             can_drill=can_drill,
+            can_duplicate=can_duplicate,
+            can_request_access=can_request_access,
+            can_save_spreadsheets=can_save_spreadsheets,
             can_schedule=can_schedule,
             can_upload=can_upload,
             can_use_dashboard_ai=can_use_dashboard_ai,

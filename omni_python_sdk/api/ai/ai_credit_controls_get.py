@@ -63,9 +63,9 @@ def sync_detailed(
     """Get AI credit controls
 
      Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
-    user credit limit, plus read-only context (the credit limit, usage so far this billing period, and
-    the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same
-    AI-admin permission.
+    user and per-entity-group credit limits, plus read-only context (the credit limit, usage so far this
+    billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page
+    and requires the same AI-admin permission.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -91,9 +91,9 @@ def sync(
     """Get AI credit controls
 
      Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
-    user credit limit, plus read-only context (the credit limit, usage so far this billing period, and
-    the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same
-    AI-admin permission.
+    user and per-entity-group credit limits, plus read-only context (the credit limit, usage so far this
+    billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page
+    and requires the same AI-admin permission.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -115,9 +115,9 @@ async def asyncio_detailed(
     """Get AI credit controls
 
      Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
-    user credit limit, plus read-only context (the credit limit, usage so far this billing period, and
-    the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same
-    AI-admin permission.
+    user and per-entity-group credit limits, plus read-only context (the credit limit, usage so far this
+    billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page
+    and requires the same AI-admin permission.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,9 +141,9 @@ async def asyncio(
     """Get AI credit controls
 
      Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
-    user credit limit, plus read-only context (the credit limit, usage so far this billing period, and
-    the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same
-    AI-admin permission.
+    user and per-entity-group credit limits, plus read-only context (the credit limit, usage so far this
+    billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page
+    and requires the same AI-admin permission.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

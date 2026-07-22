@@ -30,6 +30,7 @@ class EvalRunListItem:
         is_archived (bool): Whether the run has been archived.
         model_id (UUID): The shared model this run was executed against. Example: 880e8400-e29b-41d4-a716-446655440003.
         prompt_set_id (UUID): The prompt set this run was created from. Example: 550e8400-e29b-41d4-a716-446655440000.
+        repeat_count (int): How many times each prompt in the set was executed. Example: 1.
         run_number (int): Sequential, per-prompt-set run number. Example: 3.
         stats (EvalRunStats):
         status (EvalRunListItemStatus): Run-level lifecycle. Flips to a terminal state (COMPLETE or CANCELLED) exactly
@@ -45,6 +46,7 @@ class EvalRunListItem:
     is_archived: bool
     model_id: UUID
     prompt_set_id: UUID
+    repeat_count: int
     run_number: int
     stats: EvalRunStats
     status: EvalRunListItemStatus
@@ -77,6 +79,8 @@ class EvalRunListItem:
 
         prompt_set_id = str(self.prompt_set_id)
 
+        repeat_count = self.repeat_count
+
         run_number = self.run_number
 
         stats = self.stats.to_dict()
@@ -96,6 +100,7 @@ class EvalRunListItem:
                 "is_archived": is_archived,
                 "model_id": model_id,
                 "prompt_set_id": prompt_set_id,
+                "repeat_count": repeat_count,
                 "run_number": run_number,
                 "stats": stats,
                 "status": status,
@@ -161,6 +166,8 @@ class EvalRunListItem:
 
         prompt_set_id = UUID(d.pop("prompt_set_id"))
 
+        repeat_count = d.pop("repeat_count")
+
         run_number = d.pop("run_number")
 
         stats = EvalRunStats.from_dict(d.pop("stats"))
@@ -177,6 +184,7 @@ class EvalRunListItem:
             is_archived=is_archived,
             model_id=model_id,
             prompt_set_id=prompt_set_id,
+            repeat_count=repeat_count,
             run_number=run_number,
             stats=stats,
             status=status,

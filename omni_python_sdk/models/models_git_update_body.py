@@ -31,6 +31,12 @@ class ModelsGitUpdateBody:
         base_branch (str | Unset): The target branch for Omni pull requests Example: main.
         branch_per_pull_request (bool | Unset): If true, all pull requests will create a branch in Omni
         clone_url (str | Unset): Clone URL of the git repository (SSH or HTTPS). Example: git@github.com:org/repo.git.
+        deploy_key_passphrase (str | Unset): Passphrase for deployPrivateKey when it is encrypted. Omni uses it once to
+            decrypt the key, then stores the key under its own encryption at rest; the passphrase itself is not retained.
+        deploy_private_key (str | Unset): Bring-your-own SSH deploy private key in PEM format (RSA or ED25519, as
+            produced by ssh-keygen), used instead of an Omni-generated keypair. On update it replaces the current key,
+            enabling zero-downtime rotation: authorize the matching public key with your git provider first, then set it
+            here. Only valid for SSH auth.
         git_follower (bool | Unset): If true, the shared model will be read-only
         git_service_provider (ModelsGitUpdateBodyGitServiceProvider | Unset): The git provider type Example: github.
         model_path (str | Unset): Path to model files in the repository Example: my_model.
@@ -47,6 +53,8 @@ class ModelsGitUpdateBody:
     base_branch: str | Unset = UNSET
     branch_per_pull_request: bool | Unset = UNSET
     clone_url: str | Unset = UNSET
+    deploy_key_passphrase: str | Unset = UNSET
+    deploy_private_key: str | Unset = UNSET
     git_follower: bool | Unset = UNSET
     git_service_provider: ModelsGitUpdateBodyGitServiceProvider | Unset = UNSET
     model_path: str | Unset = UNSET
@@ -66,6 +74,10 @@ class ModelsGitUpdateBody:
         branch_per_pull_request = self.branch_per_pull_request
 
         clone_url = self.clone_url
+
+        deploy_key_passphrase = self.deploy_key_passphrase
+
+        deploy_private_key = self.deploy_private_key
 
         git_follower = self.git_follower
 
@@ -96,6 +108,10 @@ class ModelsGitUpdateBody:
             field_dict["branchPerPullRequest"] = branch_per_pull_request
         if clone_url is not UNSET:
             field_dict["cloneUrl"] = clone_url
+        if deploy_key_passphrase is not UNSET:
+            field_dict["deployKeyPassphrase"] = deploy_key_passphrase
+        if deploy_private_key is not UNSET:
+            field_dict["deployPrivateKey"] = deploy_private_key
         if git_follower is not UNSET:
             field_dict["gitFollower"] = git_follower
         if git_service_provider is not UNSET:
@@ -129,6 +145,10 @@ class ModelsGitUpdateBody:
 
         clone_url = d.pop("cloneUrl", UNSET)
 
+        deploy_key_passphrase = d.pop("deployKeyPassphrase", UNSET)
+
+        deploy_private_key = d.pop("deployPrivateKey", UNSET)
+
         git_follower = d.pop("gitFollower", UNSET)
 
         _git_service_provider = d.pop("gitServiceProvider", UNSET)
@@ -158,6 +178,8 @@ class ModelsGitUpdateBody:
             base_branch=base_branch,
             branch_per_pull_request=branch_per_pull_request,
             clone_url=clone_url,
+            deploy_key_passphrase=deploy_key_passphrase,
+            deploy_private_key=deploy_private_key,
             git_follower=git_follower,
             git_service_provider=git_service_provider,
             model_path=model_path,

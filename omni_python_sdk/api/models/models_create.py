@@ -78,7 +78,9 @@ def sync_detailed(
 ) -> Response[Any | ModelsCreateModelsCreateResponse]:
     """Create model
 
-     Create a new model. Supports creating schema, shared, branch, and shared_extension models.
+     Create a new model. Supports creating schema, shared, branch, shared_extension, and query models. A
+    query model (modelKind QUERY) is created empty under a workbook model (baseModelId); populate its
+    views and fields via the model YAML endpoint.
 
     Args:
         body (CreateModelSchemaBase | Unset):
@@ -109,7 +111,9 @@ def sync(
 ) -> Any | ModelsCreateModelsCreateResponse | None:
     """Create model
 
-     Create a new model. Supports creating schema, shared, branch, and shared_extension models.
+     Create a new model. Supports creating schema, shared, branch, shared_extension, and query models. A
+    query model (modelKind QUERY) is created empty under a workbook model (baseModelId); populate its
+    views and fields via the model YAML endpoint.
 
     Args:
         body (CreateModelSchemaBase | Unset):
@@ -135,7 +139,9 @@ async def asyncio_detailed(
 ) -> Response[Any | ModelsCreateModelsCreateResponse]:
     """Create model
 
-     Create a new model. Supports creating schema, shared, branch, and shared_extension models.
+     Create a new model. Supports creating schema, shared, branch, shared_extension, and query models. A
+    query model (modelKind QUERY) is created empty under a workbook model (baseModelId); populate its
+    views and fields via the model YAML endpoint.
 
     Args:
         body (CreateModelSchemaBase | Unset):
@@ -164,7 +170,9 @@ async def asyncio(
 ) -> Any | ModelsCreateModelsCreateResponse | None:
     """Create model
 
-     Create a new model. Supports creating schema, shared, branch, and shared_extension models.
+     Create a new model. Supports creating schema, shared, branch, shared_extension, and query models. A
+    query model (modelKind QUERY) is created empty under a workbook model (baseModelId); populate its
+    views and fields via the model YAML endpoint.
 
     Args:
         body (CreateModelSchemaBase | Unset):

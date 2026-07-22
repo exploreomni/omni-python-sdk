@@ -31,8 +31,10 @@ class EvalRunDetail:
         is_archived (bool): Whether the run has been archived.
         model_id (UUID): The shared model this run was executed against. Example: 880e8400-e29b-41d4-a716-446655440003.
         prompt_set_id (UUID): The prompt set this run was created from. Example: 550e8400-e29b-41d4-a716-446655440000.
-        results (list[EvalRunResult]): Per-prompt results for this run, ordered by their creation order in the prompt
-            set.
+        repeat_count (int): How many times each prompt in the set was executed. Results carry a `repeat_index` when this
+            is greater than 1. Example: 1.
+        results (list[EvalRunResult]): Per-execution results for this run (one per prompt, times the repeat count). No
+            guaranteed order — group executions by `eval_prompt_id` and order by `repeat_index`.
         run_number (int): Sequential, per-prompt-set run number. Example: 3.
         status (EvalRunDetailStatus): Run-level lifecycle. Flips to a terminal state (COMPLETE or CANCELLED) exactly
             once. Example: RUNNING.
@@ -47,6 +49,7 @@ class EvalRunDetail:
     is_archived: bool
     model_id: UUID
     prompt_set_id: UUID
+    repeat_count: int
     results: list[EvalRunResult]
     run_number: int
     status: EvalRunDetailStatus
@@ -79,6 +82,8 @@ class EvalRunDetail:
 
         prompt_set_id = str(self.prompt_set_id)
 
+        repeat_count = self.repeat_count
+
         results = []
         for results_item_data in self.results:
             results_item = results_item_data.to_dict()
@@ -101,6 +106,7 @@ class EvalRunDetail:
                 "is_archived": is_archived,
                 "model_id": model_id,
                 "prompt_set_id": prompt_set_id,
+                "repeat_count": repeat_count,
                 "results": results,
                 "run_number": run_number,
                 "status": status,
@@ -166,6 +172,8 @@ class EvalRunDetail:
 
         prompt_set_id = UUID(d.pop("prompt_set_id"))
 
+        repeat_count = d.pop("repeat_count")
+
         results = []
         _results = d.pop("results")
         for results_item_data in _results:
@@ -187,6 +195,7 @@ class EvalRunDetail:
             is_archived=is_archived,
             model_id=model_id,
             prompt_set_id=prompt_set_id,
+            repeat_count=repeat_count,
             results=results,
             run_number=run_number,
             status=status,

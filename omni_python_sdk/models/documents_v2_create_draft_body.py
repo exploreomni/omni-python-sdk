@@ -36,6 +36,9 @@ class DocumentsV2CreateDraftBody:
         model_id (UUID | Unset): The document's base model. Immutable and accepted only so a GET response round-trips
             through PATCH: a value matching the current model is a no-op, and a differing value is rejected — it cannot re-
             base the document. Omit it to leave the model untouched.
+        workbook_model_id (UUID | Unset): The server-assigned workbook-layer model. Read-only and accepted only so a GET
+            response round-trips through PATCH: a value from a GET of the draft or of the published document it targets is a
+            no-op, and any other value is rejected. Omit it otherwise.
         branch_id (UUID | Unset): Branch the draft is created on. Omit for a draft on the main (unpublished) workspace.
     """
 
@@ -47,6 +50,7 @@ class DocumentsV2CreateDraftBody:
     settings: SettingsPatchExternal | Unset = UNSET
     summary: str | Unset = UNSET
     model_id: UUID | Unset = UNSET
+    workbook_model_id: UUID | Unset = UNSET
     branch_id: UUID | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -84,6 +88,10 @@ class DocumentsV2CreateDraftBody:
         if not isinstance(self.model_id, Unset):
             model_id = str(self.model_id)
 
+        workbook_model_id: str | Unset = UNSET
+        if not isinstance(self.workbook_model_id, Unset):
+            workbook_model_id = str(self.workbook_model_id)
+
         branch_id: str | Unset = UNSET
         if not isinstance(self.branch_id, Unset):
             branch_id = str(self.branch_id)
@@ -107,6 +115,8 @@ class DocumentsV2CreateDraftBody:
             field_dict["summary"] = summary
         if model_id is not UNSET:
             field_dict["modelId"] = model_id
+        if workbook_model_id is not UNSET:
+            field_dict["workbookModelId"] = workbook_model_id
         if branch_id is not UNSET:
             field_dict["branchId"] = branch_id
 
@@ -170,6 +180,13 @@ class DocumentsV2CreateDraftBody:
         else:
             model_id = UUID(_model_id)
 
+        _workbook_model_id = d.pop("workbookModelId", UNSET)
+        workbook_model_id: UUID | Unset
+        if isinstance(_workbook_model_id, Unset):
+            workbook_model_id = UNSET
+        else:
+            workbook_model_id = UUID(_workbook_model_id)
+
         _branch_id = d.pop("branchId", UNSET)
         branch_id: UUID | Unset
         if isinstance(_branch_id, Unset):
@@ -186,6 +203,7 @@ class DocumentsV2CreateDraftBody:
             settings=settings,
             summary=summary,
             model_id=model_id,
+            workbook_model_id=workbook_model_id,
             branch_id=branch_id,
         )
 

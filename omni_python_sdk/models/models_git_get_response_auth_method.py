@@ -1,8 +1,9 @@
 from typing import Literal
 
-ModelsGitGetResponseAuthMethod = Literal["https_token", "ssh"]
+ModelsGitGetResponseAuthMethod = Literal["github_app", "https_token", "ssh"]
 
 MODELS_GIT_GET_RESPONSE_AUTH_METHOD_VALUES: set[ModelsGitGetResponseAuthMethod] = {
+    "github_app",
     "https_token",
     "ssh",
 }

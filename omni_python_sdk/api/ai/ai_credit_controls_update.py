@@ -79,12 +79,13 @@ def sync_detailed(
 ) -> Response[AiCreditControlsResponse | ApiError400 | ApiError401 | ApiError403]:
     """Update AI credit controls
 
-     Update the organization's AI credit controls: the downgrade and shutoff thresholds and the default
-    per-user credit limit (userDefaultCredits). All fields are optional and tri-state: omit a field to
-    leave it unchanged, send `null` to turn that control off (for userDefaultCredits: unlimited by
-    default), or send a non-negative number to set it. At least one field is required. The
-    `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the
-    full current state, the same shape as GET.
+     Update the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
+    user credit limit (userDefaultCredits), and the default per-entity-group credit limit
+    (entityGroupDefaultCredits). All fields are optional and tri-state: omit a field to leave it
+    unchanged, send `null` to turn that control off (for the defaults: unlimited by default), or send a
+    non-negative number to set it. At least one field is required. The `downgradeCredits <=
+    shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the
+    same shape as GET.
 
     Args:
         body (AiCreditControlsUpdateBody):
@@ -115,12 +116,13 @@ def sync(
 ) -> AiCreditControlsResponse | ApiError400 | ApiError401 | ApiError403 | None:
     """Update AI credit controls
 
-     Update the organization's AI credit controls: the downgrade and shutoff thresholds and the default
-    per-user credit limit (userDefaultCredits). All fields are optional and tri-state: omit a field to
-    leave it unchanged, send `null` to turn that control off (for userDefaultCredits: unlimited by
-    default), or send a non-negative number to set it. At least one field is required. The
-    `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the
-    full current state, the same shape as GET.
+     Update the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
+    user credit limit (userDefaultCredits), and the default per-entity-group credit limit
+    (entityGroupDefaultCredits). All fields are optional and tri-state: omit a field to leave it
+    unchanged, send `null` to turn that control off (for the defaults: unlimited by default), or send a
+    non-negative number to set it. At least one field is required. The `downgradeCredits <=
+    shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the
+    same shape as GET.
 
     Args:
         body (AiCreditControlsUpdateBody):
@@ -146,12 +148,13 @@ async def asyncio_detailed(
 ) -> Response[AiCreditControlsResponse | ApiError400 | ApiError401 | ApiError403]:
     """Update AI credit controls
 
-     Update the organization's AI credit controls: the downgrade and shutoff thresholds and the default
-    per-user credit limit (userDefaultCredits). All fields are optional and tri-state: omit a field to
-    leave it unchanged, send `null` to turn that control off (for userDefaultCredits: unlimited by
-    default), or send a non-negative number to set it. At least one field is required. The
-    `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the
-    full current state, the same shape as GET.
+     Update the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
+    user credit limit (userDefaultCredits), and the default per-entity-group credit limit
+    (entityGroupDefaultCredits). All fields are optional and tri-state: omit a field to leave it
+    unchanged, send `null` to turn that control off (for the defaults: unlimited by default), or send a
+    non-negative number to set it. At least one field is required. The `downgradeCredits <=
+    shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the
+    same shape as GET.
 
     Args:
         body (AiCreditControlsUpdateBody):
@@ -180,12 +183,13 @@ async def asyncio(
 ) -> AiCreditControlsResponse | ApiError400 | ApiError401 | ApiError403 | None:
     """Update AI credit controls
 
-     Update the organization's AI credit controls: the downgrade and shutoff thresholds and the default
-    per-user credit limit (userDefaultCredits). All fields are optional and tri-state: omit a field to
-    leave it unchanged, send `null` to turn that control off (for userDefaultCredits: unlimited by
-    default), or send a non-negative number to set it. At least one field is required. The
-    `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the
-    full current state, the same shape as GET.
+     Update the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-
+    user credit limit (userDefaultCredits), and the default per-entity-group credit limit
+    (entityGroupDefaultCredits). All fields are optional and tri-state: omit a field to leave it
+    unchanged, send `null` to turn that control off (for the defaults: unlimited by default), or send a
+    non-negative number to set it. At least one field is required. The `downgradeCredits <=
+    shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the
+    same shape as GET.
 
     Args:
         body (AiCreditControlsUpdateBody):

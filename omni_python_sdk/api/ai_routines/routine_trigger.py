@@ -102,8 +102,10 @@ def sync_detailed(
 
      Run a routine immediately, in addition to its schedule. The run executes once using the routine
     owner's permissions and delivers the AI response to every configured recipient — it is not a private
-    preview. Returns once the run has started; the result is delivered asynchronously. Organization API
-    keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.
+    preview. Because runs execute as the owner, the owner's per-connector AI toggles (set in the chat +
+    menu) govern which integration tools the agent may use. Returns once the run has started; the result
+    is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on
+    behalf of a specific organization member.
 
     Args:
         id (UUID): The UUID of the routine.
@@ -139,8 +141,10 @@ def sync(
 
      Run a routine immediately, in addition to its schedule. The run executes once using the routine
     owner's permissions and delivers the AI response to every configured recipient — it is not a private
-    preview. Returns once the run has started; the result is delivered asynchronously. Organization API
-    keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.
+    preview. Because runs execute as the owner, the owner's per-connector AI toggles (set in the chat +
+    menu) govern which integration tools the agent may use. Returns once the run has started; the result
+    is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on
+    behalf of a specific organization member.
 
     Args:
         id (UUID): The UUID of the routine.
@@ -171,8 +175,10 @@ async def asyncio_detailed(
 
      Run a routine immediately, in addition to its schedule. The run executes once using the routine
     owner's permissions and delivers the AI response to every configured recipient — it is not a private
-    preview. Returns once the run has started; the result is delivered asynchronously. Organization API
-    keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.
+    preview. Because runs execute as the owner, the owner's per-connector AI toggles (set in the chat +
+    menu) govern which integration tools the agent may use. Returns once the run has started; the result
+    is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on
+    behalf of a specific organization member.
 
     Args:
         id (UUID): The UUID of the routine.
@@ -206,8 +212,10 @@ async def asyncio(
 
      Run a routine immediately, in addition to its schedule. The run executes once using the routine
     owner's permissions and delivers the AI response to every configured recipient — it is not a private
-    preview. Returns once the run has started; the result is delivered asynchronously. Organization API
-    keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.
+    preview. Because runs execute as the owner, the owner's per-connector AI toggles (set in the chat +
+    menu) govern which integration tools the agent may use. Returns once the run has started; the result
+    is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on
+    behalf of a specific organization member.
 
     Args:
         id (UUID): The UUID of the routine.

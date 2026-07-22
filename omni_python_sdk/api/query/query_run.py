@@ -7,7 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.query_run_body import QueryRunBody
-from ...models.query_run_response import QueryRunResponse
+from ...models.query_run_response_200_item import QueryRunResponse200Item
 from ...models.query_timeout_response import QueryTimeoutResponse
 from ...types import UNSET, Response, Unset
 
@@ -45,9 +45,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | QueryRunResponse | QueryTimeoutResponse | None:
+) -> Any | QueryTimeoutResponse | list[QueryRunResponse200Item] | None:
     if response.status_code == 200:
-        response_200 = QueryRunResponse.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = QueryRunResponse200Item.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
 
@@ -84,7 +89,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | QueryRunResponse | QueryTimeoutResponse]:
+) -> Response[Any | QueryTimeoutResponse | list[QueryRunResponse200Item]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -98,8 +103,17 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: QueryRunBody | Unset = UNSET,
     user_id: UUID | Unset = UNSET,
-) -> Response[Any | QueryRunResponse | QueryTimeoutResponse]:
+) -> Response[Any | QueryTimeoutResponse | list[QueryRunResponse200Item]]:
     """Execute a semantic query
+
+     Runs a semantic query. By default (no `resultType`) the response is a stream of newline-delimited
+    JSON (`Content-Type: text/ndjson`), one JSON object per line: a `jobs_submitted` header, then one
+    line per job as it reaches a terminal state (a completed job carries the result set as
+    base64-encoded Arrow IPC in `result`; use `summary.fields` to interpret the decoded columns), then a
+    footer. A footer with non-empty `remaining_job_ids` means the wait window elapsed before every job
+    finished — poll GET /api/v1/query/wait with those IDs until the list is empty. When `resultType` is
+    set, the response is instead a single CSV, XLSX, or JSON document, and a timeout is reported as a
+    408.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -110,7 +124,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | QueryRunResponse | QueryTimeoutResponse]
+        Response[Any | QueryTimeoutResponse | list[QueryRunResponse200Item]]
     """
 
     kwargs = _get_kwargs(
@@ -130,8 +144,17 @@ def sync(
     client: AuthenticatedClient | Client,
     body: QueryRunBody | Unset = UNSET,
     user_id: UUID | Unset = UNSET,
-) -> Any | QueryRunResponse | QueryTimeoutResponse | None:
+) -> Any | QueryTimeoutResponse | list[QueryRunResponse200Item] | None:
     """Execute a semantic query
+
+     Runs a semantic query. By default (no `resultType`) the response is a stream of newline-delimited
+    JSON (`Content-Type: text/ndjson`), one JSON object per line: a `jobs_submitted` header, then one
+    line per job as it reaches a terminal state (a completed job carries the result set as
+    base64-encoded Arrow IPC in `result`; use `summary.fields` to interpret the decoded columns), then a
+    footer. A footer with non-empty `remaining_job_ids` means the wait window elapsed before every job
+    finished — poll GET /api/v1/query/wait with those IDs until the list is empty. When `resultType` is
+    set, the response is instead a single CSV, XLSX, or JSON document, and a timeout is reported as a
+    408.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -142,7 +165,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | QueryRunResponse | QueryTimeoutResponse
+        Any | QueryTimeoutResponse | list[QueryRunResponse200Item]
     """
 
     return sync_detailed(
@@ -157,8 +180,17 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: QueryRunBody | Unset = UNSET,
     user_id: UUID | Unset = UNSET,
-) -> Response[Any | QueryRunResponse | QueryTimeoutResponse]:
+) -> Response[Any | QueryTimeoutResponse | list[QueryRunResponse200Item]]:
     """Execute a semantic query
+
+     Runs a semantic query. By default (no `resultType`) the response is a stream of newline-delimited
+    JSON (`Content-Type: text/ndjson`), one JSON object per line: a `jobs_submitted` header, then one
+    line per job as it reaches a terminal state (a completed job carries the result set as
+    base64-encoded Arrow IPC in `result`; use `summary.fields` to interpret the decoded columns), then a
+    footer. A footer with non-empty `remaining_job_ids` means the wait window elapsed before every job
+    finished — poll GET /api/v1/query/wait with those IDs until the list is empty. When `resultType` is
+    set, the response is instead a single CSV, XLSX, or JSON document, and a timeout is reported as a
+    408.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -169,7 +201,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | QueryRunResponse | QueryTimeoutResponse]
+        Response[Any | QueryTimeoutResponse | list[QueryRunResponse200Item]]
     """
 
     kwargs = _get_kwargs(
@@ -187,8 +219,17 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: QueryRunBody | Unset = UNSET,
     user_id: UUID | Unset = UNSET,
-) -> Any | QueryRunResponse | QueryTimeoutResponse | None:
+) -> Any | QueryTimeoutResponse | list[QueryRunResponse200Item] | None:
     """Execute a semantic query
+
+     Runs a semantic query. By default (no `resultType`) the response is a stream of newline-delimited
+    JSON (`Content-Type: text/ndjson`), one JSON object per line: a `jobs_submitted` header, then one
+    line per job as it reaches a terminal state (a completed job carries the result set as
+    base64-encoded Arrow IPC in `result`; use `summary.fields` to interpret the decoded columns), then a
+    footer. A footer with non-empty `remaining_job_ids` means the wait window elapsed before every job
+    finished — poll GET /api/v1/query/wait with those IDs until the list is empty. When `resultType` is
+    set, the response is instead a single CSV, XLSX, or JSON document, and a timeout is reported as a
+    408.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -199,7 +240,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | QueryRunResponse | QueryTimeoutResponse
+        Any | QueryTimeoutResponse | list[QueryRunResponse200Item]
     """
 
     return (

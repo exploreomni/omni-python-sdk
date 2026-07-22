@@ -35,6 +35,9 @@ class DocumentsV2PatchDraftBody:
         model_id (UUID | Unset): The document's base model. Immutable and accepted only so a GET response round-trips
             through PATCH: a value matching the current model is a no-op, and a differing value is rejected — it cannot re-
             base the document. Omit it to leave the model untouched.
+        workbook_model_id (UUID | Unset): The server-assigned workbook-layer model. Read-only and accepted only so a GET
+            response round-trips through PATCH: a value from a GET of the draft or of the published document it targets is a
+            no-op, and any other value is rejected. Omit it otherwise.
     """
 
     containers: list[ContainersItem] | Unset = UNSET
@@ -45,6 +48,7 @@ class DocumentsV2PatchDraftBody:
     settings: SettingsPatchExternal | Unset = UNSET
     summary: str | Unset = UNSET
     model_id: UUID | Unset = UNSET
+    workbook_model_id: UUID | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         containers: list[dict[str, Any]] | Unset = UNSET
@@ -80,6 +84,10 @@ class DocumentsV2PatchDraftBody:
         if not isinstance(self.model_id, Unset):
             model_id = str(self.model_id)
 
+        workbook_model_id: str | Unset = UNSET
+        if not isinstance(self.workbook_model_id, Unset):
+            workbook_model_id = str(self.workbook_model_id)
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update({})
@@ -99,6 +107,8 @@ class DocumentsV2PatchDraftBody:
             field_dict["summary"] = summary
         if model_id is not UNSET:
             field_dict["modelId"] = model_id
+        if workbook_model_id is not UNSET:
+            field_dict["workbookModelId"] = workbook_model_id
 
         return field_dict
 
@@ -160,6 +170,13 @@ class DocumentsV2PatchDraftBody:
         else:
             model_id = UUID(_model_id)
 
+        _workbook_model_id = d.pop("workbookModelId", UNSET)
+        workbook_model_id: UUID | Unset
+        if isinstance(_workbook_model_id, Unset):
+            workbook_model_id = UNSET
+        else:
+            workbook_model_id = UUID(_workbook_model_id)
+
         documents_v2_patch_draft_body = cls(
             containers=containers,
             controls=controls,
@@ -169,6 +186,7 @@ class DocumentsV2PatchDraftBody:
             settings=settings,
             summary=summary,
             model_id=model_id,
+            workbook_model_id=workbook_model_id,
         )
 
         return documents_v2_patch_draft_body

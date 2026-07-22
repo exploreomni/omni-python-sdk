@@ -103,8 +103,8 @@ def sync_detailed(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         body (DocumentsV2PatchDraftBody | Unset):
 
     Raises:
@@ -142,8 +142,8 @@ def sync(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         body (DocumentsV2PatchDraftBody | Unset):
 
     Raises:
@@ -176,8 +176,8 @@ async def asyncio_detailed(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         body (DocumentsV2PatchDraftBody | Unset):
 
     Raises:
@@ -213,8 +213,8 @@ async def asyncio(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         body (DocumentsV2PatchDraftBody | Unset):
 
     Raises:

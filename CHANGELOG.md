@@ -16,5 +16,8 @@ Full rewrite: the SDK is now generated from the official Omni OpenAPI spec.
   and more), with typed models and sync + async variants.
 - Packaging modernized to `pyproject.toml`; fixes the incorrect `dotenv`
   dependency (now `python-dotenv`).
-- Spec synced from omni repo commit `7805fc5e5dcc6bcd3fbc39885b5f675fa8470195`
-  (see `spec/provenance.json`).
+- Spec synced from omni repo commit `c3fe7934808a8086999643252e5c19d0917ed171`
+  (see `spec/provenance.json`), which fixes the query endpoints' declared
+  content types to NDJSON with typed stream-line models
+  (exploreomni/omni#57144) and adds AI credit-control entity groups, model
+  suggestions, and dashboard-removal endpoints (128 paths / 201 operations).

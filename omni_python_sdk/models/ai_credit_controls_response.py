@@ -17,6 +17,8 @@ class AiCreditControlsResponse:
             the same Salesforce account), not just this org. 0 when no limit is configured. Example: 2000.
         credits_used (float): This org's credit usage in the current billing period. Example: 450.
         downgrade_credits (float | None): Downgrade threshold, or `null` if the downgrade control is off. Example: 800.
+        entity_group_default_credits (float | None): Default per-entity-group AI credit limit, or `null` when embed
+            entity groups are unlimited by default. Example: 100.
         period_end (int): End of the current billing period as a Unix ms timestamp (UTC calendar-month boundary).
         period_start (int): Start of the current billing period as a Unix ms timestamp (UTC calendar-month boundary).
         shutoff_credits (float | None): Shutoff threshold, or `null` if the shutoff control is off. Example: 1200.
@@ -27,6 +29,7 @@ class AiCreditControlsResponse:
     account_credit_limit: float
     credits_used: float
     downgrade_credits: float | None
+    entity_group_default_credits: float | None
     period_end: int
     period_start: int
     shutoff_credits: float | None
@@ -40,6 +43,9 @@ class AiCreditControlsResponse:
 
         downgrade_credits: float | None
         downgrade_credits = self.downgrade_credits
+
+        entity_group_default_credits: float | None
+        entity_group_default_credits = self.entity_group_default_credits
 
         period_end = self.period_end
 
@@ -58,6 +64,7 @@ class AiCreditControlsResponse:
                 "accountCreditLimit": account_credit_limit,
                 "creditsUsed": credits_used,
                 "downgradeCredits": downgrade_credits,
+                "entityGroupDefaultCredits": entity_group_default_credits,
                 "periodEnd": period_end,
                 "periodStart": period_start,
                 "shutoffCredits": shutoff_credits,
@@ -81,6 +88,13 @@ class AiCreditControlsResponse:
 
         downgrade_credits = _parse_downgrade_credits(d.pop("downgradeCredits"))
 
+        def _parse_entity_group_default_credits(data: object) -> float | None:
+            if data is None:
+                return data
+            return cast(float | None, data)
+
+        entity_group_default_credits = _parse_entity_group_default_credits(d.pop("entityGroupDefaultCredits"))
+
         period_end = d.pop("periodEnd")
 
         period_start = d.pop("periodStart")
@@ -103,6 +117,7 @@ class AiCreditControlsResponse:
             account_credit_limit=account_credit_limit,
             credits_used=credits_used,
             downgrade_credits=downgrade_credits,
+            entity_group_default_credits=entity_group_default_credits,
             period_end=period_end,
             period_start=period_start,
             shutoff_credits=shutoff_credits,

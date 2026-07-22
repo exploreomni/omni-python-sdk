@@ -108,7 +108,8 @@ def sync_detailed(
     queries against the specified model, and produce a summarized answer. Jobs are processed by a
     background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to
     poll for status, or configure a webhookUrl to receive a notification when the job completes.
-    Optionally continue an existing conversation by providing a conversationId.
+    Optionally continue an existing conversation by providing a conversationId. The effective user's
+    per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -146,7 +147,8 @@ def sync(
     queries against the specified model, and produce a summarized answer. Jobs are processed by a
     background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to
     poll for status, or configure a webhookUrl to receive a notification when the job completes.
-    Optionally continue an existing conversation by providing a conversationId.
+    Optionally continue an existing conversation by providing a conversationId. The effective user's
+    per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -179,7 +181,8 @@ async def asyncio_detailed(
     queries against the specified model, and produce a summarized answer. Jobs are processed by a
     background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to
     poll for status, or configure a webhookUrl to receive a notification when the job completes.
-    Optionally continue an existing conversation by providing a conversationId.
+    Optionally continue an existing conversation by providing a conversationId. The effective user's
+    per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)
@@ -215,7 +218,8 @@ async def asyncio(
     queries against the specified model, and produce a summarized answer. Jobs are processed by a
     background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to
     poll for status, or configure a webhookUrl to receive a notification when the job completes.
-    Optionally continue an existing conversation by providing a conversationId.
+    Optionally continue an existing conversation by providing a conversationId. The effective user's
+    per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.
 
     Args:
         user_id (UUID | Unset): Target user membership ID (for org-scoped API keys)

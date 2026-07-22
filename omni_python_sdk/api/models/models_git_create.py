@@ -88,6 +88,9 @@ def sync_detailed(
 ) -> Response[Any | ModelsGitCreateResponse]:
     """Create git configuration
 
+     Create git configuration for a model. For SSH auth, Omni generates a deploy keypair by default;
+    supply deployPrivateKey (with deployKeyPassphrase for encrypted keys) to bring your own instead.
+
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
         body (ModelsGitCreateBody | Unset):
@@ -120,6 +123,9 @@ def sync(
 ) -> Any | ModelsGitCreateResponse | None:
     """Create git configuration
 
+     Create git configuration for a model. For SSH auth, Omni generates a deploy keypair by default;
+    supply deployPrivateKey (with deployKeyPassphrase for encrypted keys) to bring your own instead.
+
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
         body (ModelsGitCreateBody | Unset):
@@ -146,6 +152,9 @@ async def asyncio_detailed(
     body: ModelsGitCreateBody | Unset = UNSET,
 ) -> Response[Any | ModelsGitCreateResponse]:
     """Create git configuration
+
+     Create git configuration for a model. For SSH auth, Omni generates a deploy keypair by default;
+    supply deployPrivateKey (with deployKeyPassphrase for encrypted keys) to bring your own instead.
 
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.
@@ -176,6 +185,9 @@ async def asyncio(
     body: ModelsGitCreateBody | Unset = UNSET,
 ) -> Any | ModelsGitCreateResponse | None:
     """Create git configuration
+
+     Create git configuration for a model. For SSH auth, Omni generates a deploy keypair by default;
+    supply deployPrivateKey (with deployKeyPassphrase for encrypted keys) to bring your own instead.
 
     Args:
         model_id (UUID): Model UUID Example: 123e4567-e89b-12d3-a456-426614174000.

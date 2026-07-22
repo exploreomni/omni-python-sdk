@@ -28,6 +28,8 @@ class DocumentsV2ReadResponse:
             so a GET round-trips through PATCH; supplying a different value on PATCH is rejected.
         name (str): Document name.
         query_presentations (QueryPresentationsReadExternal): (Not statically modeled; use plain dicts.)
+        workbook_model_id (UUID): Server-assigned WORKBOOK-layer model layered on `modelId`. Read-only — echoed here so
+            a GET round-trips through PATCH; each draft has its own, so a draft read returns the draft workbook’s model.
         containers (list[ContainersItem] | Unset): Container layout array (grid / stack / page / reference containers,
             recursively nested). The server validates the full structure on apply. (Not statically modeled; use plain
             dicts.)
@@ -39,6 +41,7 @@ class DocumentsV2ReadResponse:
     model_id: UUID
     name: str
     query_presentations: QueryPresentationsReadExternal
+    workbook_model_id: UUID
     containers: list[ContainersItem] | Unset = UNSET
     controls: ControlsReadExternal | Unset = UNSET
     settings: SettingsReadExternal | Unset = UNSET
@@ -53,6 +56,8 @@ class DocumentsV2ReadResponse:
         name = self.name
 
         query_presentations = self.query_presentations.to_dict()
+
+        workbook_model_id = str(self.workbook_model_id)
 
         containers: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.containers, Unset):
@@ -77,6 +82,7 @@ class DocumentsV2ReadResponse:
                 "modelId": model_id,
                 "name": name,
                 "queryPresentations": query_presentations,
+                "workbookModelId": workbook_model_id,
             }
         )
         if containers is not UNSET:
@@ -110,6 +116,8 @@ class DocumentsV2ReadResponse:
 
         query_presentations = QueryPresentationsReadExternal.from_dict(d.pop("queryPresentations"))
 
+        workbook_model_id = UUID(d.pop("workbookModelId"))
+
         _containers = d.pop("containers", UNSET)
         containers: list[ContainersItem] | Unset = UNSET
         if _containers is not UNSET:
@@ -138,6 +146,7 @@ class DocumentsV2ReadResponse:
             model_id=model_id,
             name=name,
             query_presentations=query_presentations,
+            workbook_model_id=workbook_model_id,
             containers=containers,
             controls=controls,
             settings=settings,

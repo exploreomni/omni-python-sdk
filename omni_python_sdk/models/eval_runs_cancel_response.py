@@ -19,7 +19,7 @@ class EvalRunsCancelResponse:
     Attributes:
         cancelled (int): Number of per-prompt agentic jobs that were cancelled by this request. Example: 4.
         run (EvalRunDetail): The newly created run with its initial results.
-        total (int): Total number of per-prompt jobs in the run. Example: 12.
+        total (int): Total number of jobs in the run (prompts × the repeat count). Example: 12.
     """
 
     cancelled: int

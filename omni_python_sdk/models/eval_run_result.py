@@ -25,6 +25,9 @@ class EvalRunResult:
             latency). Example: 4121.
         cost (float | None): Total LLM cost (USD) for this prompt, if available. Example: 0.0021.
         error_reason (None | str): Failure reason string for prompts whose underlying job failed.
+        eval_prompt_id (None | UUID): Snapshot of the prompt id this result was executed for — repeated executions of
+            the same prompt share it, and it survives later prompt deletion. Null on runs created before repeats existed.
+            Example: bb0e8400-e29b-41d4-a716-446655440007.
         expectation (None | str): The prompt's expectation as of run creation (snapshotted, so later prompt edits don't
             change past runs), or null when none was set. The analysis judge scores the analysis against it. Example: The
             top product by revenue should be Aniseed Syrup..
@@ -35,6 +38,8 @@ class EvalRunResult:
         query_timing_ms (int | None): Total wall-clock time (milliseconds) the underlying job spent running warehouse
             queries — a proxy for query execution time. Null for runs executed before this metric was recorded. Example:
             1800.
+        repeat_index (int | None): 0-based repeat number of this execution within the run (see the run's
+            `repeat_count`). Null on runs created before repeats existed.
         score (float | None): Numeric judge score for this prompt result, if scoring ran. Example: 0.9.
         scoring_cost (float | None): Total LLM cost (USD) for scoring this prompt result. Example: 0.0004.
         timing_ms (int | None): Total `/generate` wall-time in milliseconds — LLM processing plus inner-loop tool
@@ -49,11 +54,13 @@ class EvalRunResult:
     ai_timing_ms: int | None
     cost: float | None
     error_reason: None | str
+    eval_prompt_id: None | UUID
     expectation: None | str
     id: UUID
     prompt: str
     query_count: int | None
     query_timing_ms: int | None
+    repeat_index: int | None
     score: float | None
     scoring_cost: float | None
     timing_ms: int | None
@@ -72,6 +79,12 @@ class EvalRunResult:
         error_reason: None | str
         error_reason = self.error_reason
 
+        eval_prompt_id: None | str
+        if isinstance(self.eval_prompt_id, UUID):
+            eval_prompt_id = str(self.eval_prompt_id)
+        else:
+            eval_prompt_id = self.eval_prompt_id
+
         expectation: None | str
         expectation = self.expectation
 
@@ -84,6 +97,9 @@ class EvalRunResult:
 
         query_timing_ms: int | None
         query_timing_ms = self.query_timing_ms
+
+        repeat_index: int | None
+        repeat_index = self.repeat_index
 
         score: float | None
         score = self.score
@@ -105,11 +121,13 @@ class EvalRunResult:
                 "ai_timing_ms": ai_timing_ms,
                 "cost": cost,
                 "error_reason": error_reason,
+                "eval_prompt_id": eval_prompt_id,
                 "expectation": expectation,
                 "id": id,
                 "prompt": prompt,
                 "query_count": query_count,
                 "query_timing_ms": query_timing_ms,
+                "repeat_index": repeat_index,
                 "score": score,
                 "scoring_cost": scoring_cost,
                 "timing_ms": timing_ms,
@@ -147,6 +165,21 @@ class EvalRunResult:
 
         error_reason = _parse_error_reason(d.pop("error_reason"))
 
+        def _parse_eval_prompt_id(data: object) -> None | UUID:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                eval_prompt_id_type_0 = UUID(data)
+
+                return eval_prompt_id_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | UUID, data)
+
+        eval_prompt_id = _parse_eval_prompt_id(d.pop("eval_prompt_id"))
+
         def _parse_expectation(data: object) -> None | str:
             if data is None:
                 return data
@@ -171,6 +204,13 @@ class EvalRunResult:
             return cast(int | None, data)
 
         query_timing_ms = _parse_query_timing_ms(d.pop("query_timing_ms"))
+
+        def _parse_repeat_index(data: object) -> int | None:
+            if data is None:
+                return data
+            return cast(int | None, data)
+
+        repeat_index = _parse_repeat_index(d.pop("repeat_index"))
 
         def _parse_score(data: object) -> float | None:
             if data is None:
@@ -205,11 +245,13 @@ class EvalRunResult:
             ai_timing_ms=ai_timing_ms,
             cost=cost,
             error_reason=error_reason,
+            eval_prompt_id=eval_prompt_id,
             expectation=expectation,
             id=id,
             prompt=prompt,
             query_count=query_count,
             query_timing_ms=query_timing_ms,
+            repeat_index=repeat_index,
             score=score,
             scoring_cost=scoring_cost,
             timing_ms=timing_ms,

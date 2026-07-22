@@ -10,6 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.agentic_job_attachment import AgenticJobAttachment
     from ..models.ai_job_submit_body_webhook_metadata import AiJobSubmitBodyWebhookMetadata
 
 
@@ -25,8 +26,13 @@ class AiJobSubmitBody:
         prompt (str): The natural language prompt for the AI to process. The AI will analyze your question, generate
             appropriate queries, execute them, and return a summarized answer. Example: What are the top 5 products by
             revenue this quarter?.
+        attachments (list[AgenticJobAttachment] | Unset): Optional image or PDF attachments (e.g. a screenshot or export
+            of a legacy BI dashboard being migrated) giving the AI additional visual context alongside the prompt. Up to 5
+            files, sharing a combined 50000-token budget with the rest of the prompt.
         branch_id (UUID | Unset): Optional branch ID for the model. Must be a branch of the shared model specified by
-            modelId. Use this to query against in-progress model changes. Example: 550e8400-e29b-41d4-a716-446655440000.
+            modelId. Queries run against the branch model, and if the AI makes model changes (organizations with agentic
+            modeling enabled), they are written to this branch instead of a newly created one. If omitted and the AI makes
+            model changes, a new branch is created automatically. Example: 550e8400-e29b-41d4-a716-446655440000.
         conversation_id (UUID | Unset): Conversation ID to continue an existing conversation thread. The AI will have
             access to the context from previous jobs in the same conversation. If omitted, a new conversation is created.
             Only one active job can exist per conversation. Example: 660e8400-e29b-41d4-a716-446655440001.
@@ -51,6 +57,7 @@ class AiJobSubmitBody:
 
     model_id: UUID
     prompt: str
+    attachments: list[AgenticJobAttachment] | Unset = UNSET
     branch_id: UUID | Unset = UNSET
     conversation_id: UUID | Unset = UNSET
     progress_webhook_enabled: bool | Unset = False
@@ -64,6 +71,13 @@ class AiJobSubmitBody:
         model_id = str(self.model_id)
 
         prompt = self.prompt
+
+        attachments: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.attachments, Unset):
+            attachments = []
+            for attachments_item_data in self.attachments:
+                attachments_item = attachments_item_data.to_dict()
+                attachments.append(attachments_item)
 
         branch_id: str | Unset = UNSET
         if not isinstance(self.branch_id, Unset):
@@ -93,6 +107,8 @@ class AiJobSubmitBody:
                 "prompt": prompt,
             }
         )
+        if attachments is not UNSET:
+            field_dict["attachments"] = attachments
         if branch_id is not UNSET:
             field_dict["branchId"] = branch_id
         if conversation_id is not UNSET:
@@ -112,12 +128,22 @@ class AiJobSubmitBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.agentic_job_attachment import AgenticJobAttachment
         from ..models.ai_job_submit_body_webhook_metadata import AiJobSubmitBodyWebhookMetadata
 
         d = dict(src_dict)
         model_id = UUID(d.pop("modelId"))
 
         prompt = d.pop("prompt")
+
+        _attachments = d.pop("attachments", UNSET)
+        attachments: list[AgenticJobAttachment] | Unset = UNSET
+        if _attachments is not UNSET:
+            attachments = []
+            for attachments_item_data in _attachments:
+                attachments_item = AgenticJobAttachment.from_dict(attachments_item_data)
+
+                attachments.append(attachments_item)
 
         _branch_id = d.pop("branchId", UNSET)
         branch_id: UUID | Unset
@@ -151,6 +177,7 @@ class AiJobSubmitBody:
         ai_job_submit_body = cls(
             model_id=model_id,
             prompt=prompt,
+            attachments=attachments,
             branch_id=branch_id,
             conversation_id=conversation_id,
             progress_webhook_enabled=progress_webhook_enabled,

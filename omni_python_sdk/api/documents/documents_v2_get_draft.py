@@ -101,8 +101,8 @@ def sync_detailed(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         pretty (DocumentsV2GetDraftPretty | Unset): Set `true` or `1` to pretty-print (2-space
             indent) the response; `false` / `0` (the default) is compact. Key ordering is
             deterministic regardless.
@@ -148,8 +148,8 @@ def sync(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         pretty (DocumentsV2GetDraftPretty | Unset): Set `true` or `1` to pretty-print (2-space
             indent) the response; `false` / `0` (the default) is compact. Key ordering is
             deterministic regardless.
@@ -190,8 +190,8 @@ async def asyncio_detailed(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         pretty (DocumentsV2GetDraftPretty | Unset): Set `true` or `1` to pretty-print (2-space
             indent) the response; `false` / `0` (the default) is compact. Key ordering is
             deterministic regardless.
@@ -235,8 +235,8 @@ async def asyncio(
 
     Args:
         identifier (str): Published document identifier. Example: abc123.
-        draft_identifier (str): Draft workbook identifier (see `POST
-            /api/v1/documents/{identifier}/draft`). Example: def456.
+        draft_identifier (str): Draft workbook identifier (see `PATCH
+            /api/v2/documents/{identifier}/draft`). Example: def456.
         pretty (DocumentsV2GetDraftPretty | Unset): Set `true` or `1` to pretty-print (2-space
             indent) the response; `false` / `0` (the default) is compact. Key ordering is
             deterministic regardless.

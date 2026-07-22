@@ -22,6 +22,10 @@ from ..models.create_model_schema_base_model_kind_type_3 import (
     CreateModelSchemaBaseModelKindType3,
     check_create_model_schema_base_model_kind_type_3,
 )
+from ..models.create_model_schema_base_model_kind_type_4 import (
+    CreateModelSchemaBaseModelKindType4,
+    check_create_model_schema_base_model_kind_type_4,
+)
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -40,8 +44,8 @@ class CreateModelSchemaBase:
         allow_as_workbook_base (bool | Unset): Allow this model as a workbook base
         base_model_id (str | Unset): Base model ID for extension or branch models
         model_kind (CreateModelSchemaBaseModelKindType0 | CreateModelSchemaBaseModelKindType1 |
-            CreateModelSchemaBaseModelKindType2 | CreateModelSchemaBaseModelKindType3 | Unset): Kind of model to create
-            Default: 'SCHEMA'.
+            CreateModelSchemaBaseModelKindType2 | CreateModelSchemaBaseModelKindType3 | CreateModelSchemaBaseModelKindType4
+            | Unset): Kind of model to create Default: 'SCHEMA'.
         model_name (str | Unset): Name for the model
         uses_isolated_branches (bool | Unset): For SHARED_EXTENSION models, controls if branches are shown on extension
             model page instead of parent shared model
@@ -56,6 +60,7 @@ class CreateModelSchemaBase:
         | CreateModelSchemaBaseModelKindType1
         | CreateModelSchemaBaseModelKindType2
         | CreateModelSchemaBaseModelKindType3
+        | CreateModelSchemaBaseModelKindType4
         | Unset
     ) = "SCHEMA"
     model_name: str | Unset = UNSET
@@ -79,6 +84,8 @@ class CreateModelSchemaBase:
         model_kind: str | Unset
         if isinstance(self.model_kind, Unset):
             model_kind = UNSET
+        elif isinstance(self.model_kind, str):
+            model_kind = self.model_kind
         elif isinstance(self.model_kind, str):
             model_kind = self.model_kind
         elif isinstance(self.model_kind, str):
@@ -141,6 +148,7 @@ class CreateModelSchemaBase:
             | CreateModelSchemaBaseModelKindType1
             | CreateModelSchemaBaseModelKindType2
             | CreateModelSchemaBaseModelKindType3
+            | CreateModelSchemaBaseModelKindType4
             | Unset
         ):
             if isinstance(data, Unset):
@@ -169,11 +177,19 @@ class CreateModelSchemaBase:
                 return model_kind_type_2
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                model_kind_type_3 = check_create_model_schema_base_model_kind_type_3(data)
+
+                return model_kind_type_3
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
             if not isinstance(data, str):
                 raise TypeError()
-            model_kind_type_3 = check_create_model_schema_base_model_kind_type_3(data)
+            model_kind_type_4 = check_create_model_schema_base_model_kind_type_4(data)
 
-            return model_kind_type_3
+            return model_kind_type_4
 
         model_kind = _parse_model_kind(d.pop("modelKind", UNSET))
 

@@ -17,6 +17,9 @@ class AiCreditControlsUpdateBody:
         downgrade_credits (float | None | Unset): Credit usage at which AI downgrades to a cheaper model. Omit to leave
             unchanged, `null` to turn off, or a non-negative number to set. Must be at or below shutoffCredits. Example:
             800.
+        entity_group_default_credits (float | None | Unset): Default per-entity-group AI credit limit for the billing
+            period — what every embed entity group without an individual limit gets. Omit to leave unchanged, `null` for
+            unlimited by default, or a non-negative number to set. Example: 100.
         shutoff_credits (float | None | Unset): Credit usage at which AI shuts off entirely. Omit to leave unchanged,
             `null` to turn off, or a non-negative number to set. Example: 1200.
         user_default_credits (float | None | Unset): Default per-user AI credit limit for the billing period — what
@@ -25,6 +28,7 @@ class AiCreditControlsUpdateBody:
     """
 
     downgrade_credits: float | None | Unset = UNSET
+    entity_group_default_credits: float | None | Unset = UNSET
     shutoff_credits: float | None | Unset = UNSET
     user_default_credits: float | None | Unset = UNSET
 
@@ -34,6 +38,12 @@ class AiCreditControlsUpdateBody:
             downgrade_credits = UNSET
         else:
             downgrade_credits = self.downgrade_credits
+
+        entity_group_default_credits: float | None | Unset
+        if isinstance(self.entity_group_default_credits, Unset):
+            entity_group_default_credits = UNSET
+        else:
+            entity_group_default_credits = self.entity_group_default_credits
 
         shutoff_credits: float | None | Unset
         if isinstance(self.shutoff_credits, Unset):
@@ -52,6 +62,8 @@ class AiCreditControlsUpdateBody:
         field_dict.update({})
         if downgrade_credits is not UNSET:
             field_dict["downgradeCredits"] = downgrade_credits
+        if entity_group_default_credits is not UNSET:
+            field_dict["entityGroupDefaultCredits"] = entity_group_default_credits
         if shutoff_credits is not UNSET:
             field_dict["shutoffCredits"] = shutoff_credits
         if user_default_credits is not UNSET:
@@ -71,6 +83,15 @@ class AiCreditControlsUpdateBody:
             return cast(float | None | Unset, data)
 
         downgrade_credits = _parse_downgrade_credits(d.pop("downgradeCredits", UNSET))
+
+        def _parse_entity_group_default_credits(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        entity_group_default_credits = _parse_entity_group_default_credits(d.pop("entityGroupDefaultCredits", UNSET))
 
         def _parse_shutoff_credits(data: object) -> float | None | Unset:
             if data is None:
@@ -92,6 +113,7 @@ class AiCreditControlsUpdateBody:
 
         ai_credit_controls_update_body = cls(
             downgrade_credits=downgrade_credits,
+            entity_group_default_credits=entity_group_default_credits,
             shutoff_credits=shutoff_credits,
             user_default_credits=user_default_credits,
         )

@@ -979,10 +979,18 @@
       "AiJobSubmitBody": {
         "type": "object",
         "properties": {
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgenticJobAttachment"
+            },
+            "maxItems": 5,
+            "description": "Optional image or PDF attachments (e.g. a screenshot or export of a legacy BI dashboard being migrated) giving the AI additional visual context alongside the prompt. Up to 5 files, sharing a combined 50000-token budget with the rest of the prompt."
+          },
           "branchId": {
             "type": "string",
             "format": "uuid",
-            "description": "Optional branch ID for the model. Must be a branch of the shared model specified by modelId. Use this to query against in-progress model changes.",
+            "description": "Optional branch ID for the model. Must be a branch of the shared model specified by modelId. Queries run against the branch model, and if the AI makes model changes (organizations with agentic modeling enabled), they are written to this branch instead of a newly created one. If omitted and the AI makes model changes, a new branch is created automatically.",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "conversationId": {
@@ -1038,6 +1046,31 @@
         "required": [
           "modelId",
           "prompt"
+        ]
+      },
+      "AgenticJobAttachment": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Base64-encoded file content.",
+            "example": "iVBORw0KGgoAAAANSUhEUgAA..."
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the attachment. Must be an image type (e.g. image/png, image/jpeg) or application/pdf.",
+            "example": "image/png"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional filename, used for display/logging only.",
+            "example": "legacy-dashboard-screenshot.png"
+          }
+        },
+        "required": [
+          "data",
+          "mimeType"
         ]
       },
       "AiJobStatusResponse": {
@@ -1638,6 +1671,15 @@
             "description": "Downgrade threshold, or `null` if the downgrade control is off.",
             "example": 800
           },
+          "entityGroupDefaultCredits": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Default per-entity-group AI credit limit, or `null` when embed entity groups are unlimited by default.",
+            "example": 100
+          },
           "periodEnd": {
             "type": "integer",
             "minimum": 0,
@@ -1671,6 +1713,7 @@
           "accountCreditLimit",
           "creditsUsed",
           "downgradeCredits",
+          "entityGroupDefaultCredits",
           "periodEnd",
           "periodStart",
           "shutoffCredits",
@@ -1688,6 +1731,15 @@
             "minimum": 0,
             "description": "Credit usage at which AI downgrades to a cheaper model. Omit to leave unchanged, `null` to turn off, or a non-negative number to set. Must be at or below shutoffCredits.",
             "example": 800
+          },
+          "entityGroupDefaultCredits": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Default per-entity-group AI credit limit for the billing period — what every embed entity group without an individual limit gets. Omit to leave unchanged, `null` for unlimited by default, or a non-negative number to set.",
+            "example": 100
           },
           "shutoffCredits": {
             "type": [
@@ -1835,6 +1887,132 @@
           "userId"
         ],
         "additionalProperties": false
+      },
+      "AiEntityGroupCreditLimitsResponse": {
+        "type": "object",
+        "properties": {
+          "entityGroups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "creditLimit": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "The entity group's effective AI credit limit, or `null` for unlimited.",
+                  "example": 50
+                },
+                "entity": {
+                  "type": "string",
+                  "description": "The embed entity's identifier (the SSO `entity` value).",
+                  "example": "acme-corp"
+                },
+                "usesDefaultLimit": {
+                  "type": "boolean",
+                  "description": "True when the entity group has no individual limit and follows the org default."
+                }
+              },
+              "required": [
+                "creditLimit",
+                "entity",
+                "usesDefaultLimit"
+              ]
+            }
+          }
+        },
+        "required": [
+          "entityGroups"
+        ]
+      },
+      "AiEntityGroupCreditLimitsUpdateBody": {
+        "type": "object",
+        "properties": {
+          "entityGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AiEntityGroupCreditLimitEntry"
+            },
+            "minItems": 1,
+            "maxItems": 1000,
+            "description": "Entity groups to update, at most 1000 per request. Each entry has an `entity` plus exactly one of `creditLimit` (number or `null`) or `useDefaultLimit: true`."
+          }
+        },
+        "required": [
+          "entityGroups"
+        ],
+        "additionalProperties": false
+      },
+      "AiEntityGroupCreditLimitEntry": {
+        "type": "object",
+        "properties": {
+          "creditLimit": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "The entity group's individual AI credit limit for the billing period, or `null` for unlimited. Either way this overrides the org default. Mutually exclusive with `useDefaultLimit`.",
+            "example": 50
+          },
+          "entity": {
+            "type": "string",
+            "description": "The embed entity's identifier (the SSO `entity` value).",
+            "example": "acme-corp"
+          },
+          "useDefaultLimit": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Removes the entity group's individual limit so it follows the org default. Mutually exclusive with `creditLimit`."
+          }
+        },
+        "required": [
+          "entity"
+        ],
+        "additionalProperties": false
+      },
+      "AiCreditControlsEntityGroupsListResponse": {
+        "type": "object",
+        "properties": {
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfo"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "creditLimit": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "The entity group's individual AI credit limit, or `null` for an explicit unlimited override.",
+                  "example": 50
+                },
+                "entity": {
+                  "type": "string",
+                  "description": "The embed entity's identifier (the SSO `entity` value).",
+                  "example": "acme-corp"
+                }
+              },
+              "required": [
+                "creditLimit",
+                "entity"
+              ]
+            },
+            "description": "Entity groups with an individual AI credit limit, ordered by the entity group id."
+          }
+        },
+        "required": [
+          "pageInfo",
+          "records"
+        ]
       },
       "RoutinesListResponse": {
         "type": "object",
@@ -4103,14 +4281,24 @@
       "DocumentsGetPermissionsResponse": {
         "type": "object",
         "properties": {
+          "abilities": {
+            "$ref": "#/components/schemas/DocumentAbilities"
+          },
           "permits": {
-            "description": "User permits for the document"
+            "description": "User permits for the document. Present only when userId is provided."
           }
-        }
+        },
+        "required": [
+          "abilities"
+        ]
       },
-      "DocumentsUpdatePermissionSettingsBody": {
+      "DocumentAbilities": {
         "type": "object",
         "properties": {
+          "canAnalyze": {
+            "type": "boolean",
+            "description": "Allow exploring from this document"
+          },
           "canDownload": {
             "type": "boolean",
             "description": "Allow downloading"
@@ -4118,6 +4306,86 @@
           "canDrill": {
             "type": "boolean",
             "description": "Allow drill-down"
+          },
+          "canDuplicate": {
+            "type": "boolean",
+            "description": "Allow duplicating"
+          },
+          "canRequestAccess": {
+            "type": "boolean",
+            "description": "Allow requesting access"
+          },
+          "canSaveSpreadsheets": {
+            "type": "boolean",
+            "description": "Allow creating spreadsheets"
+          },
+          "canSchedule": {
+            "type": "boolean",
+            "description": "Allow scheduling"
+          },
+          "canUpload": {
+            "type": "boolean",
+            "description": "Allow uploads"
+          },
+          "canUseDashboardAi": {
+            "type": "boolean",
+            "description": "Allow using dashboard AI"
+          },
+          "canUseTimezoneOverride": {
+            "type": "boolean",
+            "description": "Allow timezone override"
+          },
+          "canViewWorkbook": {
+            "type": "boolean",
+            "description": "Allow viewing workbook"
+          },
+          "requirePullRequestToPublish": {
+            "type": "boolean",
+            "description": "Require pull request to publish changes"
+          }
+        },
+        "required": [
+          "canAnalyze",
+          "canDownload",
+          "canDrill",
+          "canDuplicate",
+          "canRequestAccess",
+          "canSaveSpreadsheets",
+          "canSchedule",
+          "canUpload",
+          "canUseDashboardAi",
+          "canUseTimezoneOverride",
+          "canViewWorkbook",
+          "requirePullRequestToPublish"
+        ],
+        "description": "Document-level ability values, as stored on the document"
+      },
+      "DocumentsUpdatePermissionSettingsBody": {
+        "type": "object",
+        "properties": {
+          "canAnalyze": {
+            "type": "boolean",
+            "description": "Allow exploring from this document"
+          },
+          "canDownload": {
+            "type": "boolean",
+            "description": "Allow downloading"
+          },
+          "canDrill": {
+            "type": "boolean",
+            "description": "Allow drill-down"
+          },
+          "canDuplicate": {
+            "type": "boolean",
+            "description": "Allow duplicating"
+          },
+          "canRequestAccess": {
+            "type": "boolean",
+            "description": "Allow requesting access"
+          },
+          "canSaveSpreadsheets": {
+            "type": "boolean",
+            "description": "Allow creating spreadsheets"
           },
           "canSchedule": {
             "type": "boolean",
@@ -12371,6 +12639,16 @@
               }
             },
             "description": "Optional bookkeeping for this container (e.g. `attachedQueryKey` for auto-placed tiles)"
+          },
+          "mobileBehavior": {
+            "type": "string",
+            "enum": [
+              "stack",
+              "wrap",
+              "keep",
+              "hide"
+            ],
+            "description": "Overrides the automatic mobile layout: \"keep\" freezes the desktop grid arrangement, \"hide\" hides the container on mobile (\"stack\" and \"wrap\" apply to row stacks)"
           },
           "padding": {
             "anyOf": [
@@ -20711,6 +20989,16 @@
             },
             "description": "Optional bookkeeping for this container (e.g. `attachedQueryKey` for auto-placed tiles)"
           },
+          "mobileBehavior": {
+            "type": "string",
+            "enum": [
+              "stack",
+              "wrap",
+              "keep",
+              "hide"
+            ],
+            "description": "Overrides the automatic mobile layout: \"stack\" flips a row to a column, \"wrap\" keeps the row and wraps items, \"keep\" freezes the desktop arrangement, \"hide\" hides the container on mobile"
+          },
           "padding": {
             "anyOf": [
               {
@@ -22534,6 +22822,13 @@
                   "label": {
                     "type": "string"
                   },
+                  "fieldOrder": {
+                    "type": "string",
+                    "enum": [
+                      "query",
+                      "control"
+                    ]
+                  },
                   "options": {
                     "type": "array",
                     "items": {
@@ -22980,6 +23275,11 @@
                       "type": "boolean",
                       "description": "Set by the Kotlin parser when this calc references fields not selected at the top level (AI SQL-gen produces these; UI-authored calcs do not)."
                     },
+                    "anchor_row": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "description": "The 1-indexed row the Excel-style formula was authored against, so row-relative references resolve to the intended offsets — e.g. a percent-of-previous \"=B4/B5\" authored on row 5. Only used when sql_expression is omitted; defaults to 1 (B1 = this row)."
+                    },
                     "calc_name": {
                       "type": "string",
                       "description": "Internal identifier for the calculation, used as the column alias."
@@ -22998,7 +23298,7 @@
                     },
                     "original_formula": {
                       "type": "string",
-                      "description": "The original Excel-style formula before parsing (e.g. \"=SUM(A1:A10)\")."
+                      "description": "The calculation formula. Prefer referencing selected fields by name (e.g. \"=SUM(orders.revenue)\") — name references are stable under column reordering and have no row semantics. Excel-style references also work: column letters map to the query's fields in table order (A = the first field) with rows anchored at row 1 (set anchor_row to author row-relative references against a different row), and calc columns can only be referenced by letter. When sql_expression is omitted, the server parses this formula on write and rejects the request if it does not parse."
                     },
                     "outside_pivot": {
                       "type": "boolean",
@@ -23016,7 +23316,7 @@
                       "description": "Compiled SQL string produced from the formula."
                     },
                     "sql_expression": {
-                      "description": "Parsed SQL expression tree (serialized)."
+                      "description": "Parsed SQL expression tree (serialized, server-internal format). Omit it to have the server parse original_formula instead."
                     },
                     "swallow_errors": {
                       "type": "boolean",
@@ -23266,6 +23566,13 @@
                         },
                         "label": {
                           "type": "string"
+                        },
+                        "fieldOrder": {
+                          "type": "string",
+                          "enum": [
+                            "query",
+                            "control"
+                          ]
                         },
                         "options": {
                           "type": "array",
@@ -25635,13 +25942,19 @@
           },
           "settings": {
             "$ref": "#/components/schemas/SettingsReadExternal"
+          },
+          "workbookModelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Server-assigned WORKBOOK-layer model layered on `modelId`. Read-only — echoed here so a GET round-trips through PATCH; each draft has its own, so a draft read returns the draft workbook’s model."
           }
         },
         "required": [
           "description",
           "modelId",
           "name",
-          "queryPresentations"
+          "queryPresentations",
+          "workbookModelId"
         ]
       },
       "Containers": {
@@ -26662,6 +26975,13 @@
                   "label": {
                     "type": "string"
                   },
+                  "fieldOrder": {
+                    "type": "string",
+                    "enum": [
+                      "query",
+                      "control"
+                    ]
+                  },
                   "options": {
                     "type": "array",
                     "items": {
@@ -27066,6 +27386,11 @@
                       "type": "boolean",
                       "description": "Set by the Kotlin parser when this calc references fields not selected at the top level (AI SQL-gen produces these; UI-authored calcs do not)."
                     },
+                    "anchor_row": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "description": "The 1-indexed row the Excel-style formula was authored against, so row-relative references resolve to the intended offsets — e.g. a percent-of-previous \"=B4/B5\" authored on row 5. Only used when sql_expression is omitted; defaults to 1 (B1 = this row)."
+                    },
                     "calc_name": {
                       "type": "string",
                       "description": "Internal identifier for the calculation, used as the column alias."
@@ -27084,7 +27409,7 @@
                     },
                     "original_formula": {
                       "type": "string",
-                      "description": "The original Excel-style formula before parsing (e.g. \"=SUM(A1:A10)\")."
+                      "description": "The calculation formula. Prefer referencing selected fields by name (e.g. \"=SUM(orders.revenue)\") — name references are stable under column reordering and have no row semantics. Excel-style references also work: column letters map to the query's fields in table order (A = the first field) with rows anchored at row 1 (set anchor_row to author row-relative references against a different row), and calc columns can only be referenced by letter. When sql_expression is omitted, the server parses this formula on write and rejects the request if it does not parse."
                     },
                     "outside_pivot": {
                       "type": "boolean",
@@ -27102,7 +27427,7 @@
                       "description": "Compiled SQL string produced from the formula."
                     },
                     "sql_expression": {
-                      "description": "Parsed SQL expression tree (serialized)."
+                      "description": "Parsed SQL expression tree (serialized, server-internal format). Omit it to have the server parse original_formula instead."
                     },
                     "swallow_errors": {
                       "type": "boolean",
@@ -27352,6 +27677,13 @@
                         },
                         "label": {
                           "type": "string"
+                        },
+                        "fieldOrder": {
+                          "type": "string",
+                          "enum": [
+                            "query",
+                            "control"
+                          ]
                         },
                         "options": {
                           "type": "array",
@@ -29800,6 +30132,11 @@
             "type": "string",
             "format": "uuid",
             "description": "The document's base model. Immutable and accepted only so a GET response round-trips through PATCH: a value matching the current model is a no-op, and a differing value is rejected — it cannot re-base the document. Omit it to leave the model untouched."
+          },
+          "workbookModelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The server-assigned workbook-layer model. Read-only and accepted only so a GET response round-trips through PATCH: a value from a GET of the draft or of the published document it targets is a no-op, and any other value is rejected. Omit it otherwise."
           }
         },
         "additionalProperties": false
@@ -30521,6 +30858,11 @@
             "description": "The prompt set this run was created from.",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
+          "repeat_count": {
+            "type": "integer",
+            "description": "How many times each prompt in the set was executed.",
+            "example": 1
+          },
           "run_number": {
             "type": "integer",
             "description": "Sequential, per-prompt-set run number.",
@@ -30550,6 +30892,7 @@
           "is_archived",
           "model_id",
           "prompt_set_id",
+          "repeat_count",
           "run_number",
           "stats",
           "status"
@@ -30565,7 +30908,7 @@
           },
           "total": {
             "type": "integer",
-            "description": "Total number of per-prompt jobs in the run.",
+            "description": "Total number of jobs in the run (prompts × the repeat count).",
             "example": 12
           }
         },
@@ -30579,7 +30922,7 @@
         "properties": {
           "job_count": {
             "type": "integer",
-            "description": "Number of per-prompt agentic jobs created for this run (one per prompt that fanned out successfully). Enqueue onto the work queue happens after creation and is best-effort, so this count reflects jobs created, not necessarily those successfully enqueued.",
+            "description": "Number of agentic jobs created for this run (one per prompt execution — prompts × repeat count — that fanned out successfully). Enqueue onto the work queue happens after creation and is best-effort, so this count reflects jobs created, not necessarily those successfully enqueued.",
             "example": 12
           },
           "run": {
@@ -30658,12 +31001,17 @@
             "description": "The prompt set this run was created from.",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
+          "repeat_count": {
+            "type": "integer",
+            "description": "How many times each prompt in the set was executed. Results carry a `repeat_index` when this is greater than 1.",
+            "example": 1
+          },
           "results": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EvalRunResult"
             },
-            "description": "Per-prompt results for this run, ordered by their creation order in the prompt set."
+            "description": "Per-execution results for this run (one per prompt, times the repeat count). No guaranteed order — group executions by `eval_prompt_id` and order by `repeat_index`."
           },
           "run_number": {
             "type": "integer",
@@ -30691,6 +31039,7 @@
           "is_archived",
           "model_id",
           "prompt_set_id",
+          "repeat_count",
           "results",
           "run_number",
           "status"
@@ -30727,6 +31076,15 @@
             "description": "Failure reason string for prompts whose underlying job failed.",
             "example": null
           },
+          "eval_prompt_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Snapshot of the prompt id this result was executed for — repeated executions of the same prompt share it, and it survives later prompt deletion. Null on runs created before repeats existed.",
+            "example": "bb0e8400-e29b-41d4-a716-446655440007"
+          },
           "expectation": {
             "type": [
               "string",
@@ -30761,6 +31119,14 @@
             ],
             "description": "Total wall-clock time (milliseconds) the underlying job spent running warehouse queries — a proxy for query execution time. Null for runs executed before this metric was recorded.",
             "example": 1800
+          },
+          "repeat_index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "0-based repeat number of this execution within the run (see the run's `repeat_count`). Null on runs created before repeats existed.",
+            "example": 0
           },
           "score": {
             "type": [
@@ -30800,11 +31166,13 @@
           "ai_timing_ms",
           "cost",
           "error_reason",
+          "eval_prompt_id",
           "expectation",
           "id",
           "prompt",
           "query_count",
           "query_timing_ms",
+          "repeat_index",
           "score",
           "scoring_cost",
           "timing_ms",
@@ -30913,6 +31281,13 @@
                 "format": "uuid",
                 "description": "Optional branch ID to run against. Must be a branch of the prompt set's model.",
                 "example": "440e8400-e29b-41d4-a716-446655440006"
+              },
+              "repeat_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "description": "How many times to execute each prompt in the set (defaults to 1). Between 1 and 10; prompts × repeats may not exceed the per-run job limit.",
+                "example": 1
               }
             },
             "description": "Per-run configuration. Optional — omit if no overrides."
@@ -30962,13 +31337,13 @@
                 "$ref": "#/components/schemas/EvalRunDetail"
               },
               {
-                "description": "The cancelled run. `status: CANCELLED` and `is_archived: true` after this call."
+                "description": "The cancelled run. `status: CANCELLED` and `is_archived: false` after this call."
               }
             ]
           },
           "total": {
             "type": "integer",
-            "description": "Total number of per-prompt jobs in the run.",
+            "description": "Total number of jobs in the run (prompts × the repeat count).",
             "example": 12
           }
         },
@@ -31866,6 +32241,167 @@
           "value"
         ]
       },
+      "GenerateSuggestionsResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The id of the created generation run. Poll `GET /suggestions/runs/{runId}` for status."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued"
+            ],
+            "description": "The generation run was enqueued. Generation runs asynchronously."
+          }
+        },
+        "required": [
+          "runId",
+          "status"
+        ]
+      },
+      "SuggestionsCooldownResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Human-readable error message."
+          },
+          "lastCompletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the most recent run completed."
+          },
+          "retryAfterSeconds": {
+            "type": "integer",
+            "description": "Seconds to wait before a new run is allowed."
+          },
+          "status": {
+            "type": "integer",
+            "example": 429
+          }
+        },
+        "required": [
+          "detail",
+          "lastCompletedAt",
+          "retryAfterSeconds",
+          "status"
+        ]
+      },
+      "SuggestionRun": {
+        "type": "object",
+        "properties": {
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the run reached a terminal state."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the run was created (queued)."
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "description": "Failure details when `status` is `failed`; null otherwise."
+          },
+          "executionStartedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the worker started executing; null while queued."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The run id."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "executing",
+              "complete",
+              "failed"
+            ],
+            "description": "Run status. Terminal states are `complete` and `failed`."
+          },
+          "triggerSource": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "scheduled"
+            ],
+            "description": "Whether the run was triggered manually or by the schedule."
+          },
+          "triggeredBy": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "name",
+              "userId"
+            ],
+            "description": "The user who triggered a manual run; null for scheduled runs."
+          }
+        },
+        "required": [
+          "completedAt",
+          "createdAt",
+          "error",
+          "executionStartedAt",
+          "id",
+          "status",
+          "triggerSource",
+          "triggeredBy"
+        ]
+      },
+      "SuggestionRunLatestResponse": {
+        "type": "object",
+        "properties": {
+          "run": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuggestionRun"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "The most recent run for this model, or null if none exists."
+              }
+            ]
+          }
+        },
+        "required": [
+          "run"
+        ]
+      },
       "ScheduleSuggestionsResponse": {
         "type": "object",
         "properties": {
@@ -32104,6 +32640,12 @@
                 "type": "string",
                 "enum": [
                   "BRANCH"
+                ]
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "QUERY"
                 ]
               }
             ],
@@ -33087,9 +33629,10 @@
             "type": "string",
             "enum": [
               "ssh",
-              "https_token"
+              "https_token",
+              "github_app"
             ],
-            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT.",
+            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT. \"github_app\" may appear for connections managed in Omni model settings; it cannot be created or modified through this API.",
             "example": "ssh"
           },
           "baseBranch": {
@@ -33188,9 +33731,10 @@
             "type": "string",
             "enum": [
               "ssh",
-              "https_token"
+              "https_token",
+              "github_app"
             ],
-            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT.",
+            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT. \"github_app\" may appear for connections managed in Omni model settings; it cannot be created or modified through this API.",
             "example": "ssh"
           },
           "baseBranch": {
@@ -33313,6 +33857,16 @@
             "description": "Clone URL of the git repository. SSH (git@...) for deploy key auth, HTTPS (https://...) for token auth.",
             "example": "git@github.com:org/repo.git"
           },
+          "deployKeyPassphrase": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "Passphrase for deployPrivateKey when it is encrypted. Omni uses it once to decrypt the key, then stores the key under its own encryption at rest; the passphrase itself is not retained."
+          },
+          "deployPrivateKey": {
+            "type": "string",
+            "maxLength": 65536,
+            "description": "Bring-your-own SSH deploy private key in PEM format (RSA or ED25519, as produced by ssh-keygen), used instead of an Omni-generated keypair. On update it replaces the current key, enabling zero-downtime rotation: authorize the matching public key with your git provider first, then set it here. Only valid for SSH auth."
+          },
           "gitFollower": {
             "type": "boolean",
             "default": false,
@@ -33376,9 +33930,10 @@
             "type": "string",
             "enum": [
               "ssh",
-              "https_token"
+              "https_token",
+              "github_app"
             ],
-            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT.",
+            "description": "Authentication method. \"ssh\" for deploy key, \"https_token\" for deploy token/PAT. \"github_app\" may appear for connections managed in Omni model settings; it cannot be created or modified through this API.",
             "example": "ssh"
           },
           "baseBranch": {
@@ -33497,6 +34052,16 @@
             "minLength": 1,
             "description": "Clone URL of the git repository (SSH or HTTPS).",
             "example": "git@github.com:org/repo.git"
+          },
+          "deployKeyPassphrase": {
+            "type": "string",
+            "maxLength": 1024,
+            "description": "Passphrase for deployPrivateKey when it is encrypted. Omni uses it once to decrypt the key, then stores the key under its own encryption at rest; the passphrase itself is not retained."
+          },
+          "deployPrivateKey": {
+            "type": "string",
+            "maxLength": 65536,
+            "description": "Bring-your-own SSH deploy private key in PEM format (RSA or ED25519, as produced by ssh-keygen), used instead of an Omni-generated keypair. On update it replaces the current key, enabling zero-downtime rotation: authorize the matching public key with your git provider first, then set it here. Only valid for SSH auth."
           },
           "gitFollower": {
             "type": "boolean",
@@ -33883,29 +34448,146 @@
           "prompt"
         ]
       },
-      "QueryRunResponse": {
+      "QueryRunStreamLine": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/QueryStreamJobsSubmittedLine"
+          },
+          {
+            "$ref": "#/components/schemas/QueryStreamJobLine"
+          },
+          {
+            "$ref": "#/components/schemas/QueryStreamFooterLine"
+          }
+        ],
+        "description": "One line of the query/run NDJSON stream: a jobs_submitted header, then one line per job, then a footer."
+      },
+      "QueryStreamJobsSubmittedLine": {
         "type": "object",
         "properties": {
-          "completedQueries": {
-            "type": "array",
-            "items": {},
-            "description": "Queries that completed synchronously with their results."
+          "jobs_submitted": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid"
+            },
+            "description": "Map of submitted job ID to the client result ID for that job (null when the job has no client result ID). Job IDs are the keys to poll via /api/v1/query/wait."
+          }
+        },
+        "required": [
+          "jobs_submitted"
+        ],
+        "description": "First line of the query/run stream: the jobs accepted for execution."
+      },
+      "QueryStreamJobLine": {
+        "type": "object",
+        "properties": {
+          "cache_metadata": {
+            "description": "Cache metadata for the result (row count, byte size, freshness timestamps, requery plan key)."
           },
-          "jobIds": {
+          "client_result_id": {
+            "type": "string",
+            "description": "Client-supplied result ID echoed back for correlating jobs to queries."
+          },
+          "column_name_mapping": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "description": "Structured error details, e.g. an OAuth re-authentication requirement."
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Human-readable error message. Present on failed jobs.",
+            "example": "No such view \"order_items\""
+          },
+          "error_type": {
+            "type": "string",
+            "description": "Machine-readable error category (e.g. PLAN, SQL). Present on failed jobs.",
+            "example": "PLAN"
+          },
+          "job_id": {
+            "type": "string",
+            "description": "ID of the query job this line reports on."
+          },
+          "kill_reason": {
+            "type": "string",
+            "description": "Why the job was killed, when it was cancelled."
+          },
+          "query": {
+            "description": "The query that was executed."
+          },
+          "requery_fallback_sql": {
+            "type": "string"
+          },
+          "requery_sql": {
+            "type": "string",
+            "description": "SQL to re-query the cached result set, when the result supports requery."
+          },
+          "requery_table_name": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "description": "Result rows as a base64-encoded Arrow IPC stream. Present on completed jobs. Decode with any Arrow IPC reader and use summary.fields to interpret the columns."
+          },
+          "status": {
+            "type": "string",
+            "description": "Job status. Known values include COMPLETE, ERROR, FAILED, and MISSING; new values may be added over time.",
+            "example": "COMPLETE"
+          },
+          "stream_stats": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Server-side streaming latency stats, in milliseconds."
+          },
+          "summary": {
+            "description": "Execution summary. summary.fields maps field names to their metadata and is needed to interpret the decoded Arrow table; also carries the generated SQL and cache type."
+          },
+          "used_keys": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "description": "Per-job line emitted as each job reaches a terminal state. A completed job carries the result set as base64-encoded Arrow IPC in `result`; a failed job carries `error_type` and `error_message` instead."
+      },
+      "QueryStreamFooterLine": {
+        "type": "object",
+        "properties": {
+          "remaining_job_ids": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Job IDs for queries running asynchronously. Use /api/v1/query/wait to poll for results.",
-            "example": [
-              "job_abc123",
-              "job_def456"
-            ]
+            "description": "Job IDs that had not completed when the wait window elapsed. Poll /api/v1/query/wait with these IDs until the list is empty.",
+            "example": []
           },
-          "plan": {
-            "description": "Query execution plan (only present if planOnly is true)."
+          "timed_out": {
+            "type": "string",
+            "enum": [
+              "false",
+              "true"
+            ],
+            "description": "Whether the wait window elapsed before every job completed. Note: a string (\"true\"/\"false\"), not a boolean.",
+            "example": "false"
           }
-        }
+        },
+        "required": [
+          "remaining_job_ids",
+          "timed_out"
+        ],
+        "description": "Last line of the stream."
       },
       "QueryTimeoutResponse": {
         "type": "object",
@@ -33991,18 +34673,16 @@
           }
         }
       },
-      "QueryWaitResponse": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "type": "array",
-            "items": {},
-            "description": "Array of completed query results. Each result contains the query data or an error."
+      "QueryWaitStreamLine": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/QueryStreamJobLine"
+          },
+          {
+            "$ref": "#/components/schemas/QueryStreamFooterLine"
           }
-        },
-        "required": [
-          "results"
-        ]
+        ],
+        "description": "One line of the query/wait NDJSON stream: one line per completed job, then a footer. Unlike query/run, there is no jobs_submitted header line."
       },
       "SchedulesListItem": {
         "type": "object",
@@ -36422,7 +37102,7 @@
   "paths": {
     "/api/v1/ai/generate-query": {
       "post": {
-        "description": "Generate an Omni semantic query from a natural language prompt. Optionally executes the generated query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from the model, and constructs a query. Requires the querier role on the target model.",
+        "description": "Generate an Omni semantic query from a natural language prompt. Optionally executes the generated query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from the model, and constructs a query. Requires the querier role on the target model. The effective user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.",
         "operationId": "aiGenerateQuery",
         "summary": "Generate query from natural language",
         "tags": [
@@ -36647,7 +37327,7 @@
     },
     "/api/v1/ai/jobs": {
       "post": {
-        "description": "Submit a new AI job for asynchronous execution. The AI will analyze the prompt, generate and execute queries against the specified model, and produce a summarized answer. Jobs are processed by a background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to poll for status, or configure a webhookUrl to receive a notification when the job completes. Optionally continue an existing conversation by providing a conversationId.",
+        "description": "Submit a new AI job for asynchronous execution. The AI will analyze the prompt, generate and execute queries against the specified model, and produce a summarized answer. Jobs are processed by a background worker and typically complete within 15–60 seconds. Use GET /api/v1/ai/jobs/{jobId} to poll for status, or configure a webhookUrl to receive a notification when the job completes. Optionally continue an existing conversation by providing a conversationId. The effective user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use.",
         "operationId": "aiJobSubmit",
         "summary": "Submit an AI job",
         "tags": [
@@ -37252,7 +37932,7 @@
     },
     "/api/v1/ai/credit-controls": {
       "get": {
-        "description": "Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-user credit limit, plus read-only context (the credit limit, usage so far this billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same AI-admin permission.",
+        "description": "Get the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-user and per-entity-group credit limits, plus read-only context (the credit limit, usage so far this billing period, and the period bounds). This is the API mirror of the AI Hub credit controls page and requires the same AI-admin permission.",
         "operationId": "aiCreditControlsGet",
         "summary": "Get AI credit controls",
         "tags": [
@@ -37292,7 +37972,7 @@
         }
       },
       "patch": {
-        "description": "Update the organization's AI credit controls: the downgrade and shutoff thresholds and the default per-user credit limit (userDefaultCredits). All fields are optional and tri-state: omit a field to leave it unchanged, send `null` to turn that control off (for userDefaultCredits: unlimited by default), or send a non-negative number to set it. At least one field is required. The `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the same shape as GET.",
+        "description": "Update the organization's AI credit controls: the downgrade and shutoff thresholds, the default per-user credit limit (userDefaultCredits), and the default per-entity-group credit limit (entityGroupDefaultCredits). All fields are optional and tri-state: omit a field to leave it unchanged, send `null` to turn that control off (for the defaults: unlimited by default), or send a non-negative number to set it. At least one field is required. The `downgradeCredits <= shutoffCredits` invariant is enforced against the merged result. Returns the full current state, the same shape as GET.",
         "operationId": "aiCreditControlsUpdate",
         "summary": "Update AI credit controls",
         "tags": [
@@ -37494,6 +38174,155 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/credit-controls/entity-groups": {
+      "patch": {
+        "description": "Set individual embed entity groups' AI credit limits in bulk. Each entry names an entity group by its embed `entity` string and either sets an individual limit (`creditLimit`: a non-negative number, or `null` for unlimited) or removes one (`useDefaultLimit: true`) so the entity group follows the org default. Each entity may appear at most once and must have an entity group in the organization. All updates are applied in one transaction, so either every entry takes effect or none do — an unknown entity fails the whole request with a 404 naming it. Requires the same add/remove-users permission as the group settings page and the embed-entity credit-limit feature flag.",
+        "operationId": "aiCreditControlsEntityGroupsUpdate",
+        "summary": "Set individual entity groups' AI credit limits",
+        "tags": [
+          "AI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiEntityGroupCreditLimitsUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All entries applied. Returns each entity group's effective limit, in request order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiEntityGroupCreditLimitsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. Common causes: an empty entityGroups array, more than 1000 entries, an entry with both creditLimit and useDefaultLimit (or neither), a negative creditLimit, or a duplicated entity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions, per-entity-group AI credit limits are not enabled, or credit controls editing is disabled for the organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError403"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "An entity has no entity group in the organization; the response names the first invalid entity. No limits are changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "List the organization's active individual embed entity-group AI credit limits, keyed by the embed `entity` string. Only entity groups with an individual limit appear — everyone else follows the org default. A `null` creditLimit is an explicit unlimited override, distinct from following the default. Paginated via opaque cursors: pass `pageInfo.nextCursor` from one response as the `cursor` query parameter on the next request. Requires the same add/remove-users permission as the PATCH.",
+        "operationId": "aiCreditControlsEntityGroupsList",
+        "summary": "List individual entity groups' AI credit limits",
+        "tags": [
+          "AI"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor for pagination (from previous response nextCursor)",
+              "example": "eyJpZCI6IjEyMzQ1In0"
+            },
+            "required": false,
+            "description": "Cursor for pagination (from previous response nextCursor)",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Number of results per page (1-100, integer)",
+              "example": 20
+            },
+            "required": false,
+            "description": "Number of results per page (1-100, integer)",
+            "name": "pageSize",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of entity groups' individual AI credit limits.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiCreditControlsEntityGroupsListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cursor or pageSize.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions, or per-entity-group AI credit limits are not enabled for the organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError403"
                 }
               }
             }
@@ -37986,7 +38815,7 @@
     },
     "/api/v1/ai/routines/{id}/trigger": {
       "post": {
-        "description": "Run a routine immediately, in addition to its schedule. The run executes once using the routine owner's permissions and delivers the AI response to every configured recipient — it is not a private preview. Returns once the run has started; the result is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.",
+        "description": "Run a routine immediately, in addition to its schedule. The run executes once using the routine owner's permissions and delivers the AI response to every configured recipient — it is not a private preview. Because runs execute as the owner, the owner's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent may use. Returns once the run has started; the result is delivered asynchronously. Organization API keys can pass `?userId=<membershipId>` to act on behalf of a specific organization member.",
         "operationId": "routineTrigger",
         "summary": "Run a routine now",
         "tags": [
@@ -41789,6 +42618,7 @@
     },
     "/api/v1/documents/{identifier}/permissions": {
       "get": {
+        "description": "Returns the document-level ability values (the Share dialog \"Abilities\" toggles), plus the resolved permits for a specific user when `userId` is provided.",
         "operationId": "documentsGetPermissions",
         "summary": "Get document permissions",
         "tags": [
@@ -41810,17 +42640,17 @@
             "schema": {
               "type": "string",
               "format": "uuid",
-              "description": "User membership ID to check permissions for"
+              "description": "User membership ID to check permissions for. When omitted, only the document-level abilities are returned."
             },
-            "required": true,
-            "description": "User membership ID to check permissions for",
+            "required": false,
+            "description": "User membership ID to check permissions for. When omitted, only the document-level abilities are returned.",
             "name": "userId",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "User permissions for the document",
+            "description": "Document abilities, plus user permits when userId is provided",
             "content": {
               "application/json": {
                 "schema": {
@@ -43030,7 +43860,7 @@
             }
           },
           "400": {
-            "description": "Invalid request body or schema validation error (e.g. unknown top-level field, name too long, query presentation cap exceeded, or a `modelId` that differs from the document’s immutable base model)."
+            "description": "Invalid request body or schema validation error (e.g. unknown top-level field, name too long, query presentation cap exceeded, a `modelId` that differs from the document’s immutable base model, or a `workbookModelId` that differs from the read-only value a GET returns)."
           },
           "401": {
             "description": "Authentication required."
@@ -43065,11 +43895,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Draft workbook identifier (see `POST /api/v1/documents/{identifier}/draft`).",
+              "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
               "example": "def456"
             },
             "required": true,
-            "description": "Draft workbook identifier (see `POST /api/v1/documents/{identifier}/draft`).",
+            "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
             "name": "draftIdentifier",
             "in": "path"
           },
@@ -43137,11 +43967,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Draft workbook identifier (see `POST /api/v1/documents/{identifier}/draft`).",
+              "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
               "example": "def456"
             },
             "required": true,
-            "description": "Draft workbook identifier (see `POST /api/v1/documents/{identifier}/draft`).",
+            "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
             "name": "draftIdentifier",
             "in": "path"
           },
@@ -43178,7 +44008,7 @@
             }
           },
           "400": {
-            "description": "Invalid request body or schema validation error (e.g. unknown top-level field, name too long, query presentation cap exceeded, or a `modelId` that differs from the document’s immutable base model)."
+            "description": "Invalid request body or schema validation error (e.g. unknown top-level field, name too long, query presentation cap exceeded, a `modelId` that differs from the document’s immutable base model, or a `workbookModelId` that differs from the read-only value a GET returns)."
           },
           "401": {
             "description": "Authentication required."
@@ -43197,6 +44027,70 @@
           },
           "422": {
             "description": "The draft cannot satisfy the patch: a classic-layout dashboard (upgrade to the advanced layout first), an app document, or a workbook-only draft patched without a `containers` payload (or with an empty one)."
+          }
+        }
+      }
+    },
+    "/api/v2/documents/{identifier}/draft/{draftIdentifier}/dashboard": {
+      "delete": {
+        "description": "Remove the dashboard from an existing draft, leaving a workbook-only document. Its schedules are removed too, but at publish time (see below), not on this call. Parity with the UI’s \"Remove dashboard\" action, and the inverse of adding a dashboard via a `containers` patch.\n\nOperates only on the draft named by `draftIdentifier`, which the caller creates first via `PATCH …/draft`. Requiring an explicit draft keeps the removal from silently reusing (and clobbering) a draft that holds other unpublished work.\n\nNo auto-publish — publish via `POST …/draft/publish` to make the document workbook-only (publishing also clears the previously-published dashboard’s schedules). Idempotent: a draft that is already workbook-only returns 200 unchanged.",
+        "operationId": "documentsV2RemoveDashboard",
+        "summary": "Remove dashboard from document",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
+              "example": "def456"
+            },
+            "required": true,
+            "description": "Draft workbook identifier (see `PATCH /api/v2/documents/{identifier}/draft`).",
+            "name": "draftIdentifier",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Published document identifier.",
+              "example": "abc123"
+            },
+            "required": true,
+            "description": "Published document identifier.",
+            "name": "identifier",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard removed on the draft (or a no-op when already workbook-only); the response carries the `draftIdentifier`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsV2PatchDraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Insufficient permissions to update the document."
+          },
+          "404": {
+            "description": "Document or draft not found."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "409": {
+            "description": "The target is not a published document."
+          },
+          "422": {
+            "description": "The document is an app, not a dashboard."
           }
         }
       }
@@ -43940,7 +44834,7 @@
         }
       },
       "post": {
-        "description": "Create and start a new run against an existing prompt set. The run enqueues one agentic job per prompt and begins executing immediately. Returns the newly created run with its initial per-prompt result rows.",
+        "description": "Create and start a new run against an existing prompt set. The run enqueues `run_config.repeat_count` agentic jobs per prompt (default 1) and begins executing immediately. Returns the newly created run with its initial per-execution result rows.",
         "operationId": "aiEvalRunsCreate",
         "summary": "Start an eval run",
         "tags": [
@@ -44008,7 +44902,7 @@
             }
           },
           "422": {
-            "description": "`run_config.branch_id` does not belong to the prompt set's model.",
+            "description": "`run_config.branch_id` does not belong to the prompt set's model, or prompts × `run_config.repeat_count` exceeds the per-run job limit.",
             "content": {
               "application/json": {
                 "schema": {
@@ -45179,6 +46073,181 @@
         }
       }
     },
+    "/api/v1/models/{modelId}/suggestions/generate": {
+      "post": {
+        "description": "Triggers an AI suggestion generation run for the shared model and enqueues the async job. Poll `GET /suggestions/runs/{runId}` for status. Requires organization admin permissions. At most one active run per model; a cooldown applies after a completed run.",
+        "operationId": "modelSuggestionsGenerate",
+        "summary": "Generate model suggestions",
+        "tags": [
+          "AI Model Suggestions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the shared model the suggestions belong to",
+              "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            },
+            "required": true,
+            "description": "UUID of the shared model the suggestions belong to",
+            "name": "modelId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Generation run enqueued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateSuggestionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed `modelId`"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Feature not enabled, AI disabled, model is not a shared model, or caller lacks organization admin permissions"
+          },
+          "404": {
+            "description": "Model not found in this organization"
+          },
+          "405": {
+            "description": "Method not allowed"
+          },
+          "409": {
+            "description": "A generation run is already active for this model"
+          },
+          "429": {
+            "description": "A run completed recently; retry after the cooldown (see the `Retry-After` header)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionsCooldownResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to enqueue the generation job"
+          }
+        }
+      }
+    },
+    "/api/v1/models/{modelId}/suggestions/runs/{runId}": {
+      "get": {
+        "description": "Returns the status of a specific generation run. Poll until `status` is terminal (`complete` or `failed`), then re-fetch the suggestions list. Requires organization admin permissions.",
+        "operationId": "modelSuggestionsRunGet",
+        "summary": "Get a generation run",
+        "tags": [
+          "AI Model Suggestions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the shared model the run belongs to",
+              "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            },
+            "required": true,
+            "description": "UUID of the shared model the run belongs to",
+            "name": "modelId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the generation run",
+              "example": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+            },
+            "required": true,
+            "description": "UUID of the generation run",
+            "name": "runId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The generation run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed id"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Feature not enabled, AI disabled, model is not a shared model, or caller lacks organization admin permissions"
+          },
+          "404": {
+            "description": "Run not found in this organization/model"
+          }
+        }
+      }
+    },
+    "/api/v1/models/{modelId}/suggestions/runs/latest": {
+      "get": {
+        "description": "Returns the most recent generation run for the shared model (the active run if one is in flight, otherwise the last terminal run), or null if none exists. Requires organization admin permissions.",
+        "operationId": "modelSuggestionsRunLatest",
+        "summary": "Get the latest generation run",
+        "tags": [
+          "AI Model Suggestions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the shared model the suggestions belong to",
+              "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            },
+            "required": true,
+            "description": "UUID of the shared model the suggestions belong to",
+            "name": "modelId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The latest generation run, or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionRunLatestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed `modelId`"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Feature not enabled, AI disabled, model is not a shared model, or caller lacks organization admin permissions"
+          },
+          "404": {
+            "description": "Model not found in this organization"
+          }
+        }
+      }
+    },
     "/api/v1/models/{modelId}/suggestions/schedule": {
       "put": {
         "description": "Enables the daily schedule that generates suggestions for the shared model. Idempotent — re-enabling leaves an existing schedule untouched. Requires organization admin permissions.",
@@ -45659,7 +46728,7 @@
         }
       },
       "post": {
-        "description": "Create a new model. Supports creating schema, shared, branch, and shared_extension models.",
+        "description": "Create a new model. Supports creating schema, shared, branch, shared_extension, and query models. A query model (modelKind QUERY) is created empty under a workbook model (baseModelId); populate its views and fields via the model YAML endpoint.",
         "operationId": "modelsCreate",
         "summary": "Create model",
         "tags": [
@@ -47401,6 +48470,7 @@
         }
       },
       "post": {
+        "description": "Create git configuration for a model. For SSH auth, Omni generates a deploy keypair by default; supply deployPrivateKey (with deployKeyPassphrase for encrypted keys) to bring your own instead.",
         "operationId": "modelsGitCreate",
         "summary": "Create git configuration",
         "tags": [
@@ -47458,6 +48528,7 @@
         }
       },
       "patch": {
+        "description": "Update git configuration for a model. Only provided fields are changed. For SSH auth, a bring-your-own deploy key can be set via deployPrivateKey (with deployKeyPassphrase for encrypted keys), enabling zero-downtime key rotation: authorize the matching public key with the git provider first, then set the key here.",
         "operationId": "modelsGitUpdate",
         "summary": "Update git configuration",
         "tags": [
@@ -48142,6 +49213,7 @@
     },
     "/api/v1/query/run": {
       "post": {
+        "description": "Runs a semantic query. By default (no `resultType`) the response is a stream of newline-delimited JSON (`Content-Type: text/ndjson`), one JSON object per line: a `jobs_submitted` header, then one line per job as it reaches a terminal state (a completed job carries the result set as base64-encoded Arrow IPC in `result`; use `summary.fields` to interpret the decoded columns), then a footer. A footer with non-empty `remaining_job_ids` means the wait window elapsed before every job finished — poll GET /api/v1/query/wait with those IDs until the list is empty. When `resultType` is set, the response is instead a single CSV, XLSX, or JSON document, and a timeout is reported as a 408.",
         "operationId": "queryRun",
         "summary": "Execute a semantic query",
         "tags": [
@@ -48171,11 +49243,34 @@
         },
         "responses": {
           "200": {
-            "description": "Query executed or started successfully",
+            "description": "Query executed or started successfully. The default response (no resultType) is a text/ndjson stream — one JSON object per line, each matching QueryRunStreamLine; it cannot be parsed as a single JSON document. When resultType is set, the body is a single CSV, XLSX, or JSON document instead.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryRunResponse"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  "description": "Array of result-row objects keyed by field name. Returned only when resultType is \"json\"."
+                }
+              },
+              "application/vnd.ms-excel": {
+                "schema": {
+                  "description": "XLSX document. Returned only when resultType is \"xlsx\".",
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "CSV document. Returned only when resultType is \"csv\".",
+                  "type": "string"
+                }
+              },
+              "text/ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryRunStreamLine"
                 }
               }
             }
@@ -48193,7 +49288,7 @@
             "description": "Model, topic, view, or branch not found"
           },
           "408": {
-            "description": "Query timed out. The response includes remaining_job_ids that can be polled via the query/wait endpoint.",
+            "description": "Query timed out. Only returned when resultType is set — the default text/ndjson response reports timeouts in-band via the footer line's remaining_job_ids instead. The response includes remaining_job_ids that can be polled via the query/wait endpoint.",
             "content": {
               "application/json": {
                 "schema": {
@@ -48210,6 +49305,7 @@
     },
     "/api/v1/query/wait": {
       "get": {
+        "description": "Waits for previously submitted query jobs and streams results as they complete. The response is a stream of newline-delimited JSON (`Content-Type: text/ndjson`): one line per job (same shape as the job lines from query/run, including the base64-encoded Arrow IPC `result`), then a footer. Unlike query/run, there is no `jobs_submitted` header line. If the footer's `remaining_job_ids` is non-empty, call this endpoint again with those IDs until it is empty.",
         "operationId": "queryWait",
         "summary": "Wait for query jobs to complete",
         "tags": [
@@ -48230,11 +49326,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Query results for completed jobs",
+            "description": "Query results for completed jobs, as a text/ndjson stream — one JSON object per line, each matching QueryWaitStreamLine; it cannot be parsed as a single JSON document.",
             "content": {
-              "application/json": {
+              "text/ndjson": {
                 "schema": {
-                  "$ref": "#/components/schemas/QueryWaitResponse"
+                  "$ref": "#/components/schemas/QueryWaitStreamLine"
                 }
               }
             }

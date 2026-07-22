@@ -62,10 +62,11 @@ Tip: copy a ready-made query body from any workbook via **View → Query Structu
 
 > **Note:** always use these helpers for queries — don't call the generated
 > `omni_python_sdk.api.query.query_run` / `query_wait` modules directly. The
-> spec declares these responses as JSON, but the endpoints actually stream
-> NDJSON with base64-encoded Arrow IPC data, which the generated response
-> parsing can't handle. The helpers own that decoding (and job polling, and
-> surfacing query errors).
+> endpoints stream NDJSON (multiple lines per response) with base64-encoded
+> Arrow IPC data; the spec now models the line schemas (`QueryStreamJobLine`
+> etc.), but the generated response parsing can't consume a multi-line stream
+> at runtime. The helpers own that decoding (and job polling, and surfacing
+> query errors).
 
 ## Calling any endpoint
 

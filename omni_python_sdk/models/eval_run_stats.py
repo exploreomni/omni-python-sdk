@@ -15,7 +15,7 @@ class EvalRunStats:
     Attributes:
         terminal (int): Number of per-prompt jobs that have reached a terminal state (COMPLETE, FAILED, or CANCELLED).
             Example: 8.
-        total (int): Total number of per-prompt jobs in the run. Example: 12.
+        total (int): Total number of jobs in the run (prompts × the repeat count). Example: 12.
     """
 
     terminal: int

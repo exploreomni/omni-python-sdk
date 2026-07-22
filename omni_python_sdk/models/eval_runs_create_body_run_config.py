@@ -19,9 +19,12 @@ class EvalRunsCreateBodyRunConfig:
     Attributes:
         branch_id (UUID | Unset): Optional branch ID to run against. Must be a branch of the prompt set's model.
             Example: 440e8400-e29b-41d4-a716-446655440006.
+        repeat_count (int | Unset): How many times to execute each prompt in the set (defaults to 1). Between 1 and 10;
+            prompts × repeats may not exceed the per-run job limit. Example: 1.
     """
 
     branch_id: UUID | Unset = UNSET
+    repeat_count: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -29,11 +32,15 @@ class EvalRunsCreateBodyRunConfig:
         if not isinstance(self.branch_id, Unset):
             branch_id = str(self.branch_id)
 
+        repeat_count = self.repeat_count
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if branch_id is not UNSET:
             field_dict["branch_id"] = branch_id
+        if repeat_count is not UNSET:
+            field_dict["repeat_count"] = repeat_count
 
         return field_dict
 
@@ -47,8 +54,11 @@ class EvalRunsCreateBodyRunConfig:
         else:
             branch_id = UUID(_branch_id)
 
+        repeat_count = d.pop("repeat_count", UNSET)
+
         eval_runs_create_body_run_config = cls(
             branch_id=branch_id,
+            repeat_count=repeat_count,
         )
 
         eval_runs_create_body_run_config.additional_properties = d

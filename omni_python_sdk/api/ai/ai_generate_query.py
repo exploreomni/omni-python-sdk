@@ -103,7 +103,9 @@ def sync_detailed(
 
      Generate an Omni semantic query from a natural language prompt. Optionally executes the generated
     query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from
-    the model, and constructs a query. Requires the querier role on the target model.
+    the model, and constructs a query. Requires the querier role on the target model. The effective
+    user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent
+    may use.
 
     Args:
         body (AiGenerateQueryBody):
@@ -138,7 +140,9 @@ def sync(
 
      Generate an Omni semantic query from a natural language prompt. Optionally executes the generated
     query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from
-    the model, and constructs a query. Requires the querier role on the target model.
+    the model, and constructs a query. Requires the querier role on the target model. The effective
+    user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent
+    may use.
 
     Args:
         body (AiGenerateQueryBody):
@@ -168,7 +172,9 @@ async def asyncio_detailed(
 
      Generate an Omni semantic query from a natural language prompt. Optionally executes the generated
     query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from
-    the model, and constructs a query. Requires the querier role on the target model.
+    the model, and constructs a query. Requires the querier role on the target model. The effective
+    user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent
+    may use.
 
     Args:
         body (AiGenerateQueryBody):
@@ -201,7 +207,9 @@ async def asyncio(
 
      Generate an Omni semantic query from a natural language prompt. Optionally executes the generated
     query and returns results. The AI analyzes the prompt, selects appropriate fields and filters from
-    the model, and constructs a query. Requires the querier role on the target model.
+    the model, and constructs a query. Requires the querier role on the target model. The effective
+    user's per-connector AI toggles (set in the chat + menu) govern which integration tools the agent
+    may use.
 
     Args:
         body (AiGenerateQueryBody):
